@@ -1,0 +1,17 @@
+{
+	"name": "shop",
+	"version": "1.0.0",
+	"description": "",
+	"main": "src/app.ts",
+	"scripts": {
+		"start": "node dist/app.js",
+		"compile": "tsc",
+		"dev": "nodemon"
+	},
+	"author": "Stavros",
+	"license": "ISC",
+	"dependencies": {
+		"body-parser": "^1.20.0",
+		"express": "^4.17.3"
+	}
+}
