@@ -3,7 +3,7 @@ import express from "express";
 
 import adminRouter from "./routes/admin";
 import shopRouter from "./routes/shop";
-import { notFound } from "./controllers/products";
+import { get404 } from "./controllers/error";
 
 const app = express();
 
@@ -16,6 +16,6 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/admin", adminRouter);
 app.use(shopRouter);
 
-app.use(notFound);
+app.use(get404);
 
 app.listen(3000);

@@ -27,9 +27,3 @@ export const getProducts: RequestHandler = (req, res) => {
 		prods: products,
 	});
 };
-export const notFound: RequestHandler = (req, res) => {
-	res.status(404).render("404", {
-		pageTitle: "Page Not Found",
-		path: "/404",
-	});
-};
