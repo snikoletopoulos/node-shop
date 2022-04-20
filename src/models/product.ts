@@ -2,29 +2,23 @@ import fs from "fs";
 import path from "path";
 
 const getProductFromFile = (callback: (products: Product[]) => void) => {
-	const filePath = path.join(__dirname, "..", "data", "products.json");
-
 	fs.readFile(filePath, (error, fileContent) => {
 		if (error) {
-			callback([]);
+			return callback([]);
+		} else {
+			const products = JSON.parse(fileContent.toString());
+			callback(products);
 		}
-
-		callback(JSON.parse(fileContent.toString()));
 	});
 };
+
+const filePath = path.join(__dirname, "..", "data", "products.json");
 
 class Product {
 	constructor(public title: string) {}
 
 	save() {
-		const filePath = path.join(__dirname, "..", "data", "products.json");
-
-		fs.readFile(filePath, (error, fileContent) => {
-			let products: Product[] = [];
-			if (!error) {
-				products = JSON.parse(fileContent.toString());
-			}
-
+		getProductFromFile(products => {
 			products.push(this);
 
 			fs.writeFile(filePath, JSON.stringify(products), error => {
