@@ -21,12 +21,9 @@ export const postAddProduct: RequestHandler = (req, res) => {
 
 export const getProducts: RequestHandler = (req, res) => {
 	Product.fetchAll(products => {
-		res.render("shop/product-list", {
-			pageTitle: "Shop",
-			path: "/",
-			productCSS: true,
-			activeShop: true,
-			hasProducts: products.length > 0,
+		res.render("admin/products", {
+			pageTitle: "Admin Products",
+			path: "/admin/products",
 			prods: products,
 		});
 	});
