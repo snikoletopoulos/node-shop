@@ -15,7 +15,12 @@ const getProductFromFile = (callback: (products: Product[]) => void) => {
 const filePath = path.join(__dirname, "..", "data", "products.json");
 
 class Product {
-	constructor(public title: string) {}
+	constructor(
+		public title: string,
+		public imageUrl: string,
+		public description: string,
+		public price: number
+	) {}
 
 	save() {
 		getProductFromFile(products => {
