@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 
-import { getProductFromFile } from "helpers/product.helper";
+import { getProductFromFile } from "../helpers/product.helper";
 
 const filePath = path.join(__dirname, "..", "data", "products.json");
 
