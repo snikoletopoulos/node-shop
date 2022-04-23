@@ -46,6 +46,18 @@ class Product {
 
 	static async findById(id: number) {
 		const products = await this.fetchAll();
+
+		if (!products) {
+			throw new Error("No products found.");
+		}
+
+		const product = products.find(product => product.id === id);
+
+		if (!product) {
+			throw new Error("Incorect product ID");
+		}
+
+		return product;
 	}
 }
 
