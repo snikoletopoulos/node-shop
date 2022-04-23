@@ -1,4 +1,4 @@
-import fs from "fs";
+import fs from "fs/promises";
 import path from "path";
 
 import { getProductFromFile } from "../helpers/product.helper";
@@ -17,10 +17,10 @@ class Product {
 
 	save() {
 		this.id = Math.random();
-		getProductFromFile(filePath, products => {
+		Product.fetchAll(products => {
 			products.push(this);
 
-			fs.writeFile(filePath, JSON.stringify(products), error => {
+			fs.writeFile(this.filePath, JSON.stringify(products)).catch(error => {
 				if (error) {
 					console.error(error);
 				}
