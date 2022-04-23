@@ -25,7 +25,7 @@ class Product {
 		});
 	}
 
-	static fetchAll = getProductFromFile;
+	static fetchAll = getProductFromFile.bind(this, filePath);
 }
 
 export default Product;
