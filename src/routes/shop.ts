@@ -6,6 +6,7 @@ import {
 	getCart,
 	getCheckout,
 	getOrders,
+	getProduct,
 } from "../controllers/shop";
 
 const router = Router();
@@ -13,6 +14,8 @@ const router = Router();
 router.get("/", getIndex);
 
 router.get("/products", getProducts);
+
+router.get("/products/:productId", getProduct);
 
 router.get("/cart", getCart);
 
