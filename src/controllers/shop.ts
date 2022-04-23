@@ -15,6 +15,26 @@ export const getProducts: RequestHandler = (req, res) => {
 	});
 };
 
+export const getProduct: RequestHandler = async (req, res, next) => {
+	const { productId } = req.params;
+
+	let product: Product;
+	try {
+		product = await Product.findById(+productId);
+		console.log(product);
+	} catch (error) {
+		console.error(error);
+		next();
+		return;
+	}
+
+	res.render("shop/product-detail", {
+		product,
+		pageTitle: product.title,
+		path: "/products",
+	});
+};
+
 export const getIndex: RequestHandler = (req, res) => {
 	Product.fetchAll(products => {
 		res.render("shop/index", {
