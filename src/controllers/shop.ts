@@ -44,4 +44,4 @@ export const getCheckout: RequestHandler = (req, res) => {
 		pageTitle: "Checkout",
 		path: "/checkout",
 	});
-}
+};
