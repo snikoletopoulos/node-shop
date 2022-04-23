@@ -4,7 +4,7 @@ import path from "path";
 class Product {
 	public id: number | null = null;
 
-	private readonly filePath = path.join(
+	static readonly filePath = path.join(
 		__dirname,
 		"..",
 		"data",
@@ -23,7 +23,7 @@ class Product {
 		Product.fetchAll(products => {
 			products.push(this);
 
-			fs.writeFile(this.filePath, JSON.stringify(products)).catch(error => {
+			fs.writeFile(Product.filePath, JSON.stringify(products)).catch(error => {
 				if (error) {
 					console.error(error);
 				}
@@ -31,7 +31,9 @@ class Product {
 		});
 	}
 
-	static async fetchAll(callback?: (products: Product[]) => void) {
+	static async fetchAll(
+		callback?: (products: Product[]) => void
+	): Promise<Product[] | void> {
 		try {
 			const fileContent = await fs.readFile(this.filePath);
 
