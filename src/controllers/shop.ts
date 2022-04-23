@@ -21,9 +21,7 @@ export const getProduct: RequestHandler = async (req, res, next) => {
 	let product: Product;
 	try {
 		product = await Product.findById(+productId);
-		console.log(product);
 	} catch (error) {
-		console.error(error);
 		next();
 		return;
 	}
