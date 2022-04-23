@@ -1,12 +1,15 @@
 import fs from "fs/promises";
 import path from "path";
 
-import { getProductFromFile } from "../helpers/product.helper";
-
-const filePath = path.join(__dirname, "..", "data", "products.json");
-
 class Product {
 	public id: number | null = null;
+
+	private readonly filePath = path.join(
+		__dirname,
+		"..",
+		"data",
+		"products.json"
+	);
 
 	constructor(
 		public title: string,
@@ -28,7 +31,20 @@ class Product {
 		});
 	}
 
-	static fetchAll = getProductFromFile.bind(this, filePath);
+	static async fetchAll(callback?: (products: Product[]) => void) {
+		try {
+			const fileContent = await fs.readFile(this.filePath);
+
+			const products = JSON.parse(fileContent.toString());
+			return callback ? callback(products) : products;
+		} catch (error) {
+			return callback ? callback([]) : [];
+		}
+	}
+
+	static async findById(id: number) {
+		const products = await this.fetchAll();
+	}
 }
 
 export default Product;
