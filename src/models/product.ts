@@ -1,16 +1,7 @@
 import fs from "fs";
 import path from "path";
 
-const getProductFromFile = (callback: (products: Product[]) => void) => {
-	fs.readFile(filePath, (error, fileContent) => {
-		if (error) {
-			return callback([]);
-		} else {
-			const products = JSON.parse(fileContent.toString());
-			callback(products);
-		}
-	});
-};
+import { getProductFromFile } from "helpers/product.helper";
 
 const filePath = path.join(__dirname, "..", "data", "products.json");
 
@@ -23,7 +14,7 @@ class Product {
 	) {}
 
 	save() {
-		getProductFromFile(products => {
+		getProductFromFile(filePath, products => {
 			products.push(this);
 
 			fs.writeFile(filePath, JSON.stringify(products), error => {
