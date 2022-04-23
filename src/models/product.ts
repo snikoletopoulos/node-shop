@@ -6,6 +6,8 @@ import { getProductFromFile } from "../helpers/product.helper";
 const filePath = path.join(__dirname, "..", "data", "products.json");
 
 class Product {
+	public id: number | null = null;
+
 	constructor(
 		public title: string,
 		public imageUrl: string,
@@ -14,6 +16,7 @@ class Product {
 	) {}
 
 	save() {
+		this.id = Math.random();
 		getProductFromFile(filePath, products => {
 			products.push(this);
 
