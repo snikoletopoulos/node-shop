@@ -1,5 +1,6 @@
 import type { RequestHandler } from "express";
 
+import Cart from "../models/cart";
 import Product from "../models/product";
 
 export const getProducts: RequestHandler = (req, res) => {
@@ -48,6 +49,13 @@ export const getCart: RequestHandler = (req, res) => {
 		pageTitle: "Your Cart",
 		path: "/cart",
 	});
+};
+
+export const postCart: RequestHandler = async (req, res) => {
+	const { productId } = req.body;
+	await Cart.addProduct(+productId);
+
+	res.redirect("/cart");
 };
 
 export const getOrders: RequestHandler = (req, res) => {
