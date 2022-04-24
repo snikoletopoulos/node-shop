@@ -54,11 +54,13 @@ class Cart {
 	}
 
 	static updateFileCart() {
-		fs.writeFile(Cart.filePath, JSON.stringify(Cart)).catch(error => {
-			if (error) {
-				console.log(error);
+		fs.writeFile(Cart.filePath, JSON.stringify(Cart.getObject())).catch(
+			error => {
+				if (error) {
+					console.log(error);
+				}
 			}
-		});
+		);
 	}
 
 	static async updateCart<T>(callback: () => Promise<T>) {
