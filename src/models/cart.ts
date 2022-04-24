@@ -38,12 +38,19 @@ class Cart {
 	}
 
 	static async getCart() {
-		const fileContent = await fs.readFile(Cart.filePath);
-		const cart = JSON.parse(fileContent.toString());
-		Cart.products = cart.product;
-		Cart.totalPrice = cart.totalPrice;
+		try {
+			const fileContent = await fs.readFile(Cart.filePath);
+			const cart = JSON.parse(fileContent.toString());
+			Cart.products = cart.products.map(
+				(cartItemData: CartItem) =>
+					new CartItem(cartItemData.id, cartItemData.quantity)
+			);
+			Cart.totalPrice = +cart.totalPrice;
 
-		return cart;
+			return cart;
+		} catch (error) {
+			console.log(error);
+		}
 	}
 
 	static updateFileCart() {
