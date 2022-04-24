@@ -1,15 +1,12 @@
 import fs from "fs/promises";
 import path from "path";
 
+import { baseFilePath } from "../constants/files.constants";
+
 class Product {
 	public id: number | null = null;
 
-	static readonly filePath = path.join(
-		__dirname,
-		"..",
-		"data",
-		"products.json"
-	);
+	static readonly filePath = path.join(baseFilePath, "products.json");
 
 	constructor(
 		public title: string,
