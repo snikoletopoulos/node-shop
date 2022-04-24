@@ -10,6 +10,13 @@ class Cart {
 
 	static readonly filePath = path.join(baseFilePath, "cart.json");
 
+	static getObject() {
+		return {
+			products: Cart.products,
+			totalPrice: Cart.totalPrice,
+		};
+	}
+
 	static async addProduct(id: number) {
 		return Cart.updateCart(async () => {
 			const existingProductIndex = Cart.products.findIndex(
