@@ -37,6 +37,40 @@ class Cart {
 		});
 	}
 
+	static async removeItem(id: number) {
+		await Cart.updateCart(async () => {
+			const cartItem = Cart.products.find(product => product.id === id);
+
+			if (!cartItem) {
+				return;
+			}
+
+			const product = await cartItem.getProduct();
+
+			if (cartItem.quantity > 1) {
+				cartItem.quantity -= 1;
+				Cart.totalPrice -= product.price;
+			} else {
+				Cart.deleteProduct(id);
+			}
+		});
+	}
+
+	static deleteProduct(id: number) {
+		return Cart.updateCart(async () => {
+			const cartItem = Cart.products.find(product => product.id === id);
+
+			if (!cartItem) {
+				return;
+			}
+
+			const updatedCart = Cart.products.filter(product => product.id !== id);
+			const product = await cartItem.getProduct();
+			Cart.totalPrice -= cartItem.quantity * product.price;
+			Cart.products = updatedCart;
+		});
+	}
+
 	static async getCart() {
 		try {
 			const fileContent = await fs.readFile(Cart.filePath);
