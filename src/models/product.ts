@@ -46,6 +46,17 @@ class Product {
 			}
 		});
 	}
+
+	static deleteById(id: number) {
+		Product.fetchAll(async products => {
+			const updatedProducts = products.filter(prod => prod.id !== id);
+
+			try {
+				await Cart.deleteProduct(id);
+				await fs.writeFile(Product.filePath, JSON.stringify(updatedProducts));
+			} catch (error) {
+				console.log(error);
+			}
 		});
 	}
 
