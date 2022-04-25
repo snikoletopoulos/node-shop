@@ -4,11 +4,10 @@ import path from "path";
 import { baseFilePath } from "../constants/files.constants";
 
 class Product {
-	public id: number | null = null;
-
 	static readonly filePath = path.join(baseFilePath, "products.json");
 
 	constructor(
+		public id: number | null,
 		public title: string,
 		public imageUrl: string,
 		public description: string,
