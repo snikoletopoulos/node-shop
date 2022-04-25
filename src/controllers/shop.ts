@@ -42,10 +42,12 @@ export const getIndex: RequestHandler = (req, res) => {
 	});
 };
 
-export const getCart: RequestHandler = (req, res) => {
+export const getCart: RequestHandler = async (req, res) => {
+	const cartProducts = await Cart.getProducts();
 	res.render("shop/cart", {
 		pageTitle: "Your Cart",
 		path: "/cart",
+		products: cartProducts,
 	});
 };
 
