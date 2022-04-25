@@ -5,6 +5,9 @@ import adminRouter from "./routes/admin";
 import shopRouter from "./routes/shop";
 import { get404 } from "./controllers/error";
 
+import dotenv from "dotenv";
+dotenv.config();
+
 const app = express();
 
 app.set("view engine", "ejs");
