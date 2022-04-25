@@ -48,7 +48,23 @@ export const getEditProduct: RequestHandler = async (req, res) => {
 	}
 };
 
-export const postEditProduct: RequestHandler = async (req, res) => {};
+export const postEditProduct: RequestHandler = async (req, res) => {
+	const { productId, title, imageUrl, description, price } = req.body as {
+		[x: string]: string;
+	};
+
+	const updatedProduct = new Product(
+		+productId,
+		title,
+		imageUrl,
+		description,
+		+price
+	);
+
+	updatedProduct.save();
+
+	res.redirect("/admin/products");
+};
 
 export const getProducts: RequestHandler = (req, res) => {
 	Product.fetchAll(products => {
