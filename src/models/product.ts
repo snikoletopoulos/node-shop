@@ -2,6 +2,7 @@ import fs from "fs/promises";
 import path from "path";
 
 import { baseFilePath } from "../constants/files.constants";
+import Cart from "./cart";
 
 class Product {
 	static readonly filePath = path.join(baseFilePath, "products.json");
@@ -15,15 +16,36 @@ class Product {
 	) {}
 
 	save() {
-		this.id = Math.random();
 		Product.fetchAll(products => {
-			products.push(this);
+			if (this.id) {
+				const existingProductIndex = products.findIndex(
+					prod => prod.id === this.id
+				);
 
-			fs.writeFile(Product.filePath, JSON.stringify(products)).catch(error => {
-				if (error) {
-					console.error(error);
-				}
-			});
+				const updatedProduct = [...products];
+				updatedProduct[existingProductIndex] = this;
+
+				fs.writeFile(Product.filePath, JSON.stringify(updatedProduct)).catch(
+					error => {
+						if (error) {
+							console.error(error);
+						}
+					}
+				);
+			} else {
+				this.id = Math.random();
+				products.push(this);
+
+				fs.writeFile(Product.filePath, JSON.stringify(products)).catch(
+					error => {
+						if (error) {
+							console.error(error);
+						}
+					}
+				);
+			}
+		});
+	}
 		});
 	}
 
