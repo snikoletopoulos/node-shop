@@ -75,3 +75,15 @@ export const getProducts: RequestHandler = (req, res) => {
 		});
 	});
 };
+
+export const postDeleteProduct: RequestHandler = (req, res) => {
+	const { productId } = req.body;
+
+	try {
+		Product.deleteById(+productId);
+	} catch (error) {
+		console.log(error);
+	}
+
+	res.redirect("/admin/products");
+};
