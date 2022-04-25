@@ -6,9 +6,7 @@ export const addProduct: RequestHandler = (req, res) => {
 	res.render("admin/add-product", {
 		pageTitle: "Add Product",
 		path: "/admin/add-product",
-		formsCSS: true,
-		productCSS: true,
-		activeAddProduct: true,
+		editing: false,
 	});
 };
 

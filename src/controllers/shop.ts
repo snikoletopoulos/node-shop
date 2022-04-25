@@ -9,8 +9,6 @@ export const getProducts: RequestHandler = (req, res) => {
 			pageTitle: "All Products",
 			path: "/products",
 			prods: products,
-			productCSS: true,
-			activeShop: true,
 			hasProducts: products.length > 0,
 		});
 	});
