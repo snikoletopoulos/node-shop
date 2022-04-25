@@ -53,6 +53,20 @@ class Cart {
 		}
 	}
 
+	static async getProducts() {
+		await Cart.getCart();
+		const products = await Promise.all(
+			Cart.products.map(async cartItem => {
+				const product = await cartItem.getProduct();
+				return {
+					...product,
+					quantity: cartItem.quantity,
+				};
+			})
+		);
+		return products;
+	}
+
 	static updateFileCart() {
 		fs.writeFile(Cart.filePath, JSON.stringify(Cart.getObject())).catch(
 			error => {
