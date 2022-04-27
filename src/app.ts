@@ -1,12 +1,12 @@
 import path from "path";
 import express from "express";
 
+import "dotenv/config";
+
 import adminRouter from "./routes/admin";
 import shopRouter from "./routes/shop";
 import { get404 } from "./controllers/error";
-
-import dotenv from "dotenv";
-dotenv.config();
+import sequelize from "./helpers/db.helpers";
 
 const app = express();
 
@@ -21,4 +21,13 @@ app.use(shopRouter);
 
 app.use(get404);
 
-app.listen(3000);
+(async () => {
+	try {
+		const result = await sequelize.sync({ force: true });
+		console.log(result);
+
+		app.listen(3000);
+	} catch (error) {
+		console.log(error, "tessta");
+	}
+})();
