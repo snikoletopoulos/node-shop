@@ -9,7 +9,7 @@ import {
 	getProduct,
 	postCart,
 	postCartDeleteProduct,
-} from "../controllers/shop";
+} from "../controllers/shop.controllers";
 
 const router = Router();
 
