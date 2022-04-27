@@ -2,4 +2,5 @@ node_modules
 dist
 .vscode
 data
+.env.local
 .env.*.local
