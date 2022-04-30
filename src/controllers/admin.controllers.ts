@@ -63,17 +63,25 @@ export const postEditProduct: RequestHandler = async (req, res) => {
 		[x: string]: string;
 	};
 
-	const updatedProduct = new Product(
-		+productId,
-		title,
-		imageUrl,
-		description,
-		+price
-	);
+	try {
+		const product = await Product.findByPk(+productId);
 
-	updatedProduct.save();
+		if (!product) {
+			res.redirect("/");
+			return;
+		}
 
-	res.redirect("/admin/products");
+		await product.update({
+			title,
+			imageUrl,
+			description,
+			price: +price,
+		});
+
+		res.redirect("/admin/products");
+	} catch (error) {
+		console.log(error);
+	}
 };
 
 export const getProducts: RequestHandler = async (req, res) => {
