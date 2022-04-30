@@ -30,7 +30,7 @@ export const getEditProduct: RequestHandler = async (req, res) => {
 	const { productId } = req.params;
 
 	try {
-		const product = await Product.findById(+productId);
+		const product = await Product.findByPk(+productId);
 
 		if (!product) {
 			throw new Error("Product not found");
@@ -66,13 +66,13 @@ export const postEditProduct: RequestHandler = async (req, res) => {
 	res.redirect("/admin/products");
 };
 
-export const getProducts: RequestHandler = (req, res) => {
-	Product.fetchAll(products => {
-		res.render("admin/products", {
-			pageTitle: "Admin Products",
-			path: "/admin/products",
-			prods: products,
-		});
+export const getProducts: RequestHandler = async (req, res) => {
+	const products = await Product.findAll();
+
+	res.render("admin/products", {
+		pageTitle: "Admin Products",
+		path: "/admin/products",
+		prods: products,
 	});
 };
 

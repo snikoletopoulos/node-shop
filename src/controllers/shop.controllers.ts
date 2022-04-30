@@ -3,43 +3,55 @@ import type { RequestHandler } from "express";
 import Cart from "../models/cart";
 import Product from "../models/product";
 
-export const getProducts: RequestHandler = (req, res) => {
-	Product.fetchAll(products => {
+export const getProducts: RequestHandler = async (req, res) => {
+	try {
+		const products = await Product.findAll();
+
 		res.render("shop/product-list", {
 			pageTitle: "All Products",
 			path: "/products",
 			prods: products,
 			hasProducts: products.length > 0,
 		});
-	});
+	} catch (error) {
+		console.log(error);
+	}
 };
 
 export const getProduct: RequestHandler = async (req, res, next) => {
 	const { productId } = req.params;
 
-	let product: Product;
 	try {
-		product = await Product.findById(+productId);
+		const product = await Product.findByPk(+productId);
+
+		if (!product) {
+			next();
+			return;
+		}
+
+		res.render("shop/product-detail", {
+			product,
+			pageTitle: product.title,
+			path: "/products",
+		});
 	} catch (error) {
 		next();
 		return;
 	}
-
-	res.render("shop/product-detail", {
-		product,
-		pageTitle: product.title,
-		path: "/products",
-	});
 };
 
-export const getIndex: RequestHandler = (req, res) => {
-	Product.fetchAll(products => {
+export const getIndex: RequestHandler = async (req, res) => {
+	try {
+		const products = await Product.findAll();
+
 		res.render("shop/index", {
 			pageTitle: "Shop",
 			path: "/",
 			prods: products,
 		});
-	});
+	} catch (error) {
+		console.log(error);
+	}
 };
 
 export const getCart: RequestHandler = async (req, res) => {
