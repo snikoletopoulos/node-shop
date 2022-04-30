@@ -4,7 +4,7 @@ class CartItem {
 	constructor(public id: number, public quantity: number) {}
 
 	async getProduct() {
-		const product = await Product.findById(this.id);
+		const product = await Product.findByPk(this.id);
 		return product;
 	}
 }
