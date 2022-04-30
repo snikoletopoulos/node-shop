@@ -3,9 +3,9 @@ import express from "express";
 
 import "dotenv/config";
 
-import adminRouter from "./routes/admin";
-import shopRouter from "./routes/shop";
-import { get404 } from "./controllers/error";
+import adminRouter from "./routes/admin.routes";
+import shopRouter from "./routes/shop.routes";
+import { get404 } from "./controllers/error.controllers";
 import sequelize from "./helpers/db.helpers";
 
 const app = express();
