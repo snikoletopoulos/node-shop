@@ -94,11 +94,20 @@ export const getProducts: RequestHandler = async (req, res) => {
 	});
 };
 
-export const postDeleteProduct: RequestHandler = (req, res) => {
+export const postDeleteProduct: RequestHandler = async (req, res) => {
 	const { productId } = req.body;
 
 	try {
-		Product.deleteById(+productId);
+		const product = await Product.findByPk(+productId);
+
+		if (!product) {
+			res.redirect("/");
+			return;
+		}
+
+		await product.destroy();
+
+		res.redirect("/admin/products");
 	} catch (error) {
 		console.log(error);
 	}
