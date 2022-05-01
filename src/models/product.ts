@@ -4,6 +4,7 @@ import {
 	CreationOptional,
 	InferAttributes,
 	InferCreationAttributes,
+	ForeignKey,
 } from "sequelize";
 
 import sequelize from "../helpers/db.helpers";
@@ -18,6 +19,7 @@ interface ProductModel
 	price: number;
 	description: string;
 	imageUrl: string;
+	userId: ForeignKey<number>;
 }
 
 const Product = sequelize.define<ProductModel>("product", {
@@ -42,6 +44,14 @@ const Product = sequelize.define<ProductModel>("product", {
 	description: {
 		type: DataTypes.TEXT,
 		allowNull: false,
+	},
+	userId: {
+		type: DataTypes.INTEGER,
+		allowNull: true,
+		references: {
+			model: "user",
+			key: "id",
+		},
 	},
 });
 
