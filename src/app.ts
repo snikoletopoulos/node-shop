@@ -23,8 +23,18 @@ app.use(get404);
 
 (async () => {
 	try {
-		const result = await sequelize.sync({ force: true });
-		console.log(result);
+		await sequelize.sync({ force: true });
+
+		let user = await User.findByPk(1);
+
+		if (!user) {
+			user = await User.create({
+				name: "Nikero",
+				email: "nikero@test.com",
+			});
+		}
+
+		console.log(user);
 
 		app.listen(3000);
 	} catch (error) {
