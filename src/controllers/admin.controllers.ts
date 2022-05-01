@@ -14,14 +14,18 @@ export const postAddProduct: RequestHandler = async (req, res) => {
 	const { title, imageUrl, description, price } = req.body;
 
 	try {
+		if (!req.user) {
+			res.redirect("/");
+			return;
+		}
+
 		await Product.create({
 			title,
 			imageUrl,
 			description,
 			price: +price,
+			userId: req.user.id,
 		});
-
-		console.log("Created product.");
 
 		res.redirect("/");
 	} catch (error) {
