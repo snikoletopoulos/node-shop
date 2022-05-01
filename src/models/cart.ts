@@ -33,6 +33,11 @@ class Cart {
 			}
 
 			const product = await updatedCartItem.getProduct();
+
+			if (!product) {
+				throw new Error("Product(s) not found");
+			}
+
 			Cart.totalPrice += product.price;
 		});
 	}
@@ -46,6 +51,10 @@ class Cart {
 			}
 
 			const product = await cartItem.getProduct();
+
+			if (!product) {
+				throw new Error("Product(s) not found");
+			}
 
 			if (cartItem.quantity > 1) {
 				cartItem.quantity -= 1;
@@ -66,6 +75,11 @@ class Cart {
 
 			const updatedCart = Cart.products.filter(product => product.id !== id);
 			const product = await cartItem.getProduct();
+
+			if (!product) {
+				throw new Error("Product(s) not found");
+			}
+
 			Cart.totalPrice -= cartItem.quantity * product.price;
 			Cart.products = updatedCart;
 		});
