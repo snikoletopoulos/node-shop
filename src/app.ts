@@ -21,6 +21,11 @@ app.use(shopRouter);
 
 app.use(get404);
 
+Product.belongsTo(User, {
+	constraints: true,
+	onDelete: "CASCADE",
+});
+
 (async () => {
 	try {
 		await sequelize.sync({ force: true });
