@@ -9,6 +9,7 @@ import {
 import sequelize from "../helpers/db.helpers";
 import Product from "./product";
 import Cart from "./cart";
+import Order from "./order";
 
 export interface UserModel
 	extends Model<
@@ -40,5 +41,6 @@ const User = sequelize.define<UserModel>("user", {
 
 User.hasMany(Product);
 User.hasOne(Cart);
+User.hasMany(Order);
 
 export default User;
