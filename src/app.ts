@@ -7,7 +7,6 @@ import adminRouter from "./routes/admin.routes";
 import shopRouter from "./routes/shop.routes";
 import { get404 } from "./controllers/error.controllers";
 import sequelize from "./helpers/db.helpers";
-import Product from "./models/product";
 import User from "./models/user";
 
 const app = express();
@@ -38,11 +37,6 @@ app.use("/admin", adminRouter);
 app.use(shopRouter);
 
 app.use(get404);
-
-Product.belongsTo(User, {
-	constraints: true,
-	onDelete: "CASCADE",
-});
 
 (async () => {
 	try {
