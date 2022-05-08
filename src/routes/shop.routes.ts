@@ -4,7 +4,6 @@ import {
 	getProducts,
 	getIndex,
 	getCart,
-	getCheckout,
 	getOrders,
 	getProduct,
 	postCart,
@@ -29,7 +28,5 @@ router.post("/cart-delete-item", postCartDeleteProduct);
 router.post("/create-order", postOrder);
 
 router.get("/orders", getOrders);
-
-router.get("/checkout", getCheckout);
 
 export default router;
