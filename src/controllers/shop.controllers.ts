@@ -1,8 +1,6 @@
 import type { RequestHandler } from "express";
 
-import Cart from "../models/cart";
 import Product from "../models/product";
-import User from "../models/user";
 
 export const getProducts: RequestHandler = async (req, res) => {
 	try {
