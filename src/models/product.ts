@@ -8,6 +8,8 @@ import {
 } from "sequelize";
 
 import sequelize from "../helpers/db.helpers";
+import Cart from "./cart";
+import User from "./user";
 
 interface ProductModel
 	extends Model<
@@ -54,5 +56,12 @@ const Product = sequelize.define<ProductModel>("product", {
 		},
 	},
 });
+
+Product.belongsTo(User, {
+	constraints: true,
+	onDelete: "CASCADE",
+});
+
+Product.belongsToMany(Cart, {through: "cart-item"});
 
 export default Product;
