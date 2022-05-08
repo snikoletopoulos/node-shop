@@ -9,6 +9,7 @@ import {
 	getProduct,
 	postCart,
 	postCartDeleteProduct,
+	postOrder,
 } from "../controllers/shop.controllers";
 
 const router = Router();
@@ -24,6 +25,8 @@ router.get("/cart", getCart);
 router.post("/cart", postCart);
 
 router.post("/cart-delete-item", postCartDeleteProduct);
+
+router.post("/create-order", postOrder);
 
 router.get("/orders", getOrders);
 

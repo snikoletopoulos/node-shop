@@ -122,6 +122,32 @@ export const postCartDeleteProduct: RequestHandler = async (req, res) => {
 	}
 };
 
+export const postOrder: RequestHandler = async (req, res) => {
+	if (!req.user) {
+		res.redirect("/");
+		return;
+	}
+
+	const cart = await req.user.getCart();
+
+	const products = await cart.getProducts();
+
+	const newOrder = await req.user.createOrder();
+
+	await newOrder.addProducts(
+		products.map(product => ({
+			...product,
+			orderItem: {
+				quantity: product.cartItem.quantity,
+			},
+		}))
+	);
+
+	await cart.setProducts([]);
+
+	res.redirect("/orders");
+};
+
 export const getOrders: RequestHandler = (req, res) => {
 	res.render("shop/orders", {
 		pageTitle: "Your Orders",
