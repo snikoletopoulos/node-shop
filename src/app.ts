@@ -51,6 +51,8 @@ app.use(get404);
 			});
 		}
 
+		await user.createCart();
+
 		console.log(user);
 
 		app.listen(3000);
