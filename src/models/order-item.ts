@@ -17,7 +17,7 @@ interface OrederItem
 	quantity: number;
 }
 
-const OrderItem = sequelize.define<OrederItem>("order-item", {
+const OrderItem = sequelize.define<OrederItem>("orderItem", {
 	id: {
 		type: DataTypes.INTEGER,
 		autoIncrement: true,
