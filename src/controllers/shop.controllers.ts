@@ -148,16 +148,21 @@ export const postOrder: RequestHandler = async (req, res) => {
 	res.redirect("/orders");
 };
 
-export const getOrders: RequestHandler = (req, res) => {
-	res.render("shop/orders", {
-		pageTitle: "Your Orders",
-		path: "/orders",
-	});
-};
+export const getOrders: RequestHandler = async (req, res) => {
+	if (!req.user) {
+		res.redirect("/");
+		return;
+	}
 
-export const getCheckout: RequestHandler = (req, res) => {
-	res.render("shop/checkout", {
-		pageTitle: "Checkout",
-		path: "/checkout",
-	});
+	try {
+		const orders = await req.user.getOrders({ include: ["products"] });
+
+		res.render("shop/orders", {
+			pageTitle: "Your Orders",
+			path: "/orders",
+			orders,
+		});
+	} catch (error) {
+		console.log(error);
+	}
 };
