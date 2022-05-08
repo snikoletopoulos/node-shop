@@ -2,6 +2,7 @@ import type { RequestHandler } from "express";
 
 import Cart from "../models/cart";
 import Product from "../models/product";
+import User from "../models/user";
 
 export const getProducts: RequestHandler = async (req, res) => {
 	try {
@@ -55,26 +56,72 @@ export const getIndex: RequestHandler = async (req, res) => {
 };
 
 export const getCart: RequestHandler = async (req, res) => {
-	const cartProducts = await Cart.getProducts();
-	res.render("shop/cart", {
-		pageTitle: "Your Cart",
-		path: "/cart",
-		products: cartProducts,
-	});
+	try {
+		if (!req.user) {
+			res.redirect("/");
+		}
+
+		const cart = await req.user.getCart();
+
+		const cartProducts = await cart.getProducts();
+
+		res.render("shop/cart", {
+			pageTitle: "Your Cart",
+			path: "/cart",
+			products: cartProducts,
+		});
+	} catch (error) {
+		console.log(error);
+	}
 };
 
 export const postCart: RequestHandler = async (req, res) => {
 	const { productId } = req.body;
-	await Cart.addProduct(+productId);
 
-	res.redirect("/cart");
+	try {
+		const cart = await req.user.getCart();
+
+		const products = await cart.getProducts({ where: { id: productId } });
+
+		let product: Product;
+		if (products.length) {
+			product = products[0];
+		}
+
+		let newQuantity = 1;
+		if (product) {
+			const oldQuantity = product.cartItem.quantity;
+			newQuantity += oldQuantity;
+		} else {
+			product = await Product.findById(+productId);
+		}
+
+		await cart.addProduct(product, { through: { quantity: newQuantity } });
+
+		res.redirect("/cart");
+	} catch (error) {
+		console.log(error);
+	}
 };
 
 export const postCartDeleteProduct: RequestHandler = async (req, res) => {
 	const { cartItemId } = req.body;
-	await Cart.removeItem(+cartItemId);
+	if (!req.user) {
+		res.redirect("/");
+		return;
+	}
 
-	res.redirect("/cart");
+	try {
+		const cart = await req.user.getCart();
+
+		const [product] = await cart.getProducts({ where: { id: cartItemId } });
+
+		await product.cartItem.destroy();
+
+		res.redirect("/cart");
+	} catch (error) {
+		console.log(error);
+	}
 };
 
 export const getOrders: RequestHandler = (req, res) => {
