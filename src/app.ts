@@ -1,7 +1,9 @@
 import path from "path";
 import express from "express";
 
-import "dotenv/config";
+import dotenv from "dotenv";
+import dotenvExpoand from "dotenv-expand";
+dotenvExpoand.expand(dotenv.config());
 
 import adminRouter from "./routes/admin.routes";
 import shopRouter from "./routes/shop.routes";
