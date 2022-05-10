@@ -14,18 +14,14 @@ export const postAddProduct: RequestHandler = async (req, res) => {
 	const { title, imageUrl, description, price } = req.body;
 
 	try {
-		if (!req.user) {
-			res.redirect("/");
-			return;
-		}
-
-		await Product.create({
+		const product = new Product({
 			title,
 			imageUrl,
 			description,
-			price: +price,
-			userId: req.user.id,
+			price,
 		});
+
+		await product.save();
 
 		res.redirect("/");
 	} catch (error) {
@@ -44,7 +40,7 @@ export const getEditProduct: RequestHandler = async (req, res) => {
 	const { productId } = req.params;
 
 	try {
-		const product = await Product.findByPk(+productId);
+		const product = await Product.findById(productId);
 
 		if (!product) {
 			throw new Error("Product not found");
@@ -68,19 +64,19 @@ export const postEditProduct: RequestHandler = async (req, res) => {
 	};
 
 	try {
-		const product = await Product.findByPk(+productId);
+		const product = await Product.findById(productId);
 
 		if (!product) {
 			res.redirect("/");
 			return;
 		}
 
-		await product.update({
-			title,
-			imageUrl,
-			description,
-			price: +price,
-		});
+		product.title = title;
+		product.imageUrl = imageUrl;
+		product.description = description;
+		product.price = +price;
+
+		await product.save();
 
 		res.redirect("/admin/products");
 	} catch (error) {
@@ -89,7 +85,7 @@ export const postEditProduct: RequestHandler = async (req, res) => {
 };
 
 export const getProducts: RequestHandler = async (req, res) => {
-	const products = await Product.findAll();
+	const products = await Product.find();
 
 	res.render("admin/products", {
 		pageTitle: "Admin Products",
@@ -102,16 +98,14 @@ export const postDeleteProduct: RequestHandler = async (req, res) => {
 	const { productId } = req.body;
 
 	try {
-		const product = await Product.findByPk(+productId);
+		const product = await Product.findById(productId);
 
 		if (!product) {
 			res.redirect("/");
 			return;
 		}
 
-		await product.destroy();
-
-		res.redirect("/admin/products");
+		await product.remove();
 	} catch (error) {
 		console.log(error);
 	}
