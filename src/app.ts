@@ -8,7 +8,7 @@ dotenvExpoand.expand(dotenv.config());
 import adminRouter from "./routes/admin.routes";
 import shopRouter from "./routes/shop.routes";
 import { get404 } from "./controllers/error.controllers";
-import sequelize from "./helpers/db.helpers";
+import mongoose from "mongoose";
 import User from "./models/user";
 
 const app = express();
@@ -40,25 +40,22 @@ app.use(shopRouter);
 
 app.use(get404);
 
-(async () => {
-	try {
-		await sequelize.sync({ force: true });
+if (!process.env.DATABASE_URL) {
+	throw new Error("DATABASE_URL is not defined");
+}
 
-		let user = await User.findByPk(1);
-
-		if (!user) {
-			user = await User.create({
-				name: "Nikero",
-				email: "nikero@test.com",
+mongoose
+	.connect(process.env.DATABASE_URL)
+	.then(async () => {
+		if (!User.findOne()) {
+			const user = new User({
+				name: "John",
+				email: "example@example.com",
+				cart: { items: [] },
 			});
+
+			await user.save();
 		}
-
-		await user.createCart();
-
-		console.log(user);
-
 		app.listen(3000);
-	} catch (error) {
-		console.log(error, "tessta");
-	}
-})();
+	})
+	.catch(error => console.log(error));
