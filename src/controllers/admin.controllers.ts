@@ -1,6 +1,5 @@
 import type { RequestHandler } from "express";
-
-import Product from "../models/product";
+import { prisma } from "../app";
 
 export const getAddProduct: RequestHandler = (req, res) => {
 	res.render("admin/edit-product", {
@@ -14,14 +13,19 @@ export const postAddProduct: RequestHandler = async (req, res) => {
 	const { title, imageUrl, description, price } = req.body;
 
 	try {
-		const product = new Product({
-			title,
-			imageUrl,
-			description,
-			price,
+		await prisma.product.create({
+			data: {
+				title,
+				imageUrl,
+				description,
+				price: +price,
+				user: {
+					connect: {
+						id: req.user.id,
+					},
+				},
+			},
 		});
-
-		await product.save();
 
 		res.redirect("/");
 	} catch (error) {
@@ -40,7 +44,11 @@ export const getEditProduct: RequestHandler = async (req, res) => {
 	const { productId } = req.params;
 
 	try {
-		const product = await Product.findById(productId);
+		const product = await prisma.product.findUnique({
+			where: {
+				id: productId,
+			},
+		});
 
 		if (!product) {
 			throw new Error("Product not found");
@@ -64,19 +72,23 @@ export const postEditProduct: RequestHandler = async (req, res) => {
 	};
 
 	try {
-		const product = await Product.findById(productId);
+		// TODO check what happents if product is not found
+		const product = await prisma.product.update({
+			where: {
+				id: productId,
+			},
+			data: {
+				title,
+				imageUrl,
+				description,
+				price: +price,
+			},
+		});
 
 		if (!product) {
 			res.redirect("/");
 			return;
 		}
-
-		product.title = title;
-		product.imageUrl = imageUrl;
-		product.description = description;
-		product.price = +price;
-
-		await product.save();
 
 		res.redirect("/admin/products");
 	} catch (error) {
@@ -85,7 +97,7 @@ export const postEditProduct: RequestHandler = async (req, res) => {
 };
 
 export const getProducts: RequestHandler = async (req, res) => {
-	const products = await Product.find();
+	const products = await prisma.product.findMany();
 
 	res.render("admin/products", {
 		pageTitle: "Admin Products",
@@ -98,14 +110,11 @@ export const postDeleteProduct: RequestHandler = async (req, res) => {
 	const { productId } = req.body;
 
 	try {
-		const product = await Product.findById(productId);
-
-		if (!product) {
-			res.redirect("/");
-			return;
-		}
-
-		await product.remove();
+		await prisma.product.delete({
+			where: {
+				id: productId,
+			},
+		});
 	} catch (error) {
 		console.log(error);
 	}

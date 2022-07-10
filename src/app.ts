@@ -8,8 +8,7 @@ dotenvExpoand.expand(dotenv.config());
 import adminRouter from "./routes/admin.routes";
 import shopRouter from "./routes/shop.routes";
 import { get404 } from "./controllers/error.controllers";
-import mongoose from "mongoose";
-import User from "./models/user";
+import { PrismaClient } from "@prisma/client";
 
 const app = express();
 
@@ -21,7 +20,11 @@ app.use(express.static(path.join(__dirname, "public")));
 
 app.use(async (req, res, next) => {
 	try {
-		const user = await User.findById("627af4531f6eb14f3d128306");
+		const user = await prisma.user.findUnique({
+			where: {
+				id: "627af4531f6eb14f3d128306",
+			},
+		});
 
 		if (!user) {
 			throw new Error("User not found");
@@ -43,17 +46,18 @@ if (!process.env.DATABASE_URL) {
 	throw new Error("DATABASE_URL is not defined");
 }
 
-mongoose
-	.connect(process.env.DATABASE_URL)
-	.then(async () => {
-		if (!User.findOne()) {
-			const user = new User({
-				name: "John",
-				email: "example@example.com",
-				cart: { items: [] },
-			});
+export const prisma = new PrismaClient();
 
-			await user.save();
+prisma
+	.$connect()
+	.then(async () => {
+		if (!(await prisma.user.findFirst())) {
+			await prisma.user.create({
+				data: {
+					name: "John Doe",
+					email: "example@example.com",
+				},
+			});
 		}
 		app.listen(3000);
 	})

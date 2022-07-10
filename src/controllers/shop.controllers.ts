@@ -1,10 +1,9 @@
 import type { RequestHandler } from "express";
-
-import Product from "../models/product";
+import { prisma } from "../app";
 
 export const getProducts: RequestHandler = async (req, res) => {
 	try {
-		const products = await Product.findAll();
+		const products = await prisma.product.findMany();
 
 		res.render("shop/product-list", {
 			pageTitle: "All Products",
@@ -21,7 +20,11 @@ export const getProduct: RequestHandler = async (req, res, next) => {
 	const { productId } = req.params;
 
 	try {
-		const product = await Product.findByPk(+productId);
+		const product = await prisma.product.findUnique({
+			where: {
+				id: productId,
+			},
+		});
 
 		if (!product) {
 			next();
@@ -41,7 +44,7 @@ export const getProduct: RequestHandler = async (req, res, next) => {
 
 export const getIndex: RequestHandler = async (req, res) => {
 	try {
-		const products = await Product.findAll();
+		const products = await prisma.product.findMany();
 
 		res.render("shop/index", {
 			pageTitle: "Shop",
@@ -55,18 +58,34 @@ export const getIndex: RequestHandler = async (req, res) => {
 
 export const getCart: RequestHandler = async (req, res) => {
 	try {
-		if (!req.user) {
-			res.redirect("/");
-		}
+		if (!req.user) return res.redirect("/");
 
-		const cart = await req.user.getCart();
+		const user = await prisma.user.findUnique({
+			where: {
+				id: req.user.id,
+			},
+		});
 
-		const cartProducts = await cart.getProducts();
+		const cart = user?.cart;
+
+		const cartProducts = await prisma.product.findMany({
+			where: {
+				id: {
+					in: cart?.items.map(item => item.productId),
+				},
+			},
+		});
+
+		const cartProductsWithQuantity = cartProducts.map(product => ({
+			...product,
+			quantity:
+				cart?.items.find(item => item.productId === product.id)?.quantity ?? 0,
+		}));
 
 		res.render("shop/cart", {
 			pageTitle: "Your Cart",
 			path: "/cart",
-			products: cartProducts,
+			products: cartProductsWithQuantity,
 		});
 	} catch (error) {
 		console.log(error);
@@ -74,27 +93,51 @@ export const getCart: RequestHandler = async (req, res) => {
 };
 
 export const postCart: RequestHandler = async (req, res) => {
-	const { productId } = req.body;
+	if (!req.user) return res.redirect("/");
+
+	const { productId } = req.body as { productId: string };
 
 	try {
-		const cart = await req.user.getCart();
+		await prisma.product.findUniqueOrThrow({
+			where: {
+				id: productId,
+			},
+		});
 
-		const products = await cart.getProducts({ where: { id: productId } });
+		const user = await prisma.user.findUniqueOrThrow({
+			where: {
+				id: req.user.id,
+			},
+		});
 
-		let product: Product;
-		if (products.length) {
-			product = products[0];
-		}
+		const cartItems = user?.cart?.items ?? [];
 
-		let newQuantity = 1;
-		if (product) {
-			const oldQuantity = product.cartItem.quantity;
-			newQuantity += oldQuantity;
+		const selectedItem = cartItems.findIndex(
+			item => item.productId === productId
+		);
+		if (selectedItem !== -1) {
+			console.log(selectedItem);
+			cartItems[selectedItem].quantity++;
 		} else {
-			product = await Product.findById(+productId);
+			cartItems.push({
+				productId,
+				quantity: 1,
+			});
 		}
 
-		await cart.addProduct(product, { through: { quantity: newQuantity } });
+		await prisma.user.update({
+			where: {
+				id: req.user.id,
+			},
+			data: {
+				v: {
+					increment: 1,
+				},
+				cart: {
+					items: cartItems,
+				},
+			},
+		});
 
 		res.redirect("/cart");
 	} catch (error) {
@@ -103,18 +146,23 @@ export const postCart: RequestHandler = async (req, res) => {
 };
 
 export const postCartDeleteProduct: RequestHandler = async (req, res) => {
+	if (!req.user) return res.redirect("/");
 	const { cartItemId } = req.body;
-	if (!req.user) {
-		res.redirect("/");
-		return;
-	}
 
 	try {
-		const cart = await req.user.getCart();
-
-		const [product] = await cart.getProducts({ where: { id: cartItemId } });
-
-		await product.cartItem.destroy();
+		console.log(req.user.cart?.items);
+		await prisma.user.update({
+			where: {
+				id: req.user.id,
+			},
+			data: {
+				cart: {
+					items: req.user.cart?.items.filter(
+						item => item.productId !== cartItemId
+					),
+				},
+			},
+		});
 
 		res.redirect("/cart");
 	} catch (error) {
@@ -123,44 +171,73 @@ export const postCartDeleteProduct: RequestHandler = async (req, res) => {
 };
 
 export const postOrder: RequestHandler = async (req, res) => {
-	if (!req.user) {
-		res.redirect("/");
-		return;
-	}
+	if (!req.user) return res.redirect("/");
 
-	const cart = await req.user.getCart();
+	const newOrder = req.user.cart?.items ?? [];
+	if (!newOrder) return;
 
-	const products = await cart.getProducts();
-
-	const newOrder = await req.user.createOrder();
-
-	await newOrder.addProducts(
-		products.map(product => ({
-			...product,
-			orderItem: {
-				quantity: product.cartItem.quantity,
+	await prisma.order.create({
+		data: {
+			user: {
+				connect: {
+					id: req.user.id,
+				},
 			},
-		}))
-	);
+			products: newOrder,
+		},
+	});
 
-	await cart.setProducts([]);
+	await prisma.user.update({
+		where: {
+			id: req.user.id,
+		},
+		data: {
+			cart: {
+				items: [],
+			},
+		},
+	});
 
 	res.redirect("/orders");
 };
 
 export const getOrders: RequestHandler = async (req, res) => {
-	if (!req.user) {
-		res.redirect("/");
-		return;
-	}
+	if (!req.user) return res.redirect("/");
 
 	try {
-		const orders = await req.user.getOrders({ include: ["products"] });
+		const orders = await prisma.order.findMany({
+			where: {
+				userId: req.user.id,
+			},
+		});
+
+		const fullOrders = orders.map(async order => {
+			const productIds = order.products.map(product => product.productId);
+
+			const products = await prisma.product.findMany({
+				where: {
+					id: {
+						in: productIds,
+					},
+				},
+			});
+
+			return {
+				orderId: order.id,
+				products: products.map(product => ({
+					...product,
+					quantity:
+						order.products.find(
+							productInOrder => productInOrder.productId === product.id
+						)?.quantity ?? 0,
+				})),
+			};
+		});
 
 		res.render("shop/orders", {
 			pageTitle: "Your Orders",
 			path: "/orders",
-			orders,
+			orders: await Promise.all(fullOrders),
 		});
 	} catch (error) {
 		console.log(error);

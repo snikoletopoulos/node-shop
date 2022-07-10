@@ -1,10 +1,9 @@
-import type { HydratedDocument } from "mongoose";
-import type { IUser } from "./src/models/user";
+import { User } from "@prisma/client";
 
 declare global {
 	namespace Express {
 		interface Request {
-			user?: HydratedDocument<IUser>;
+			user?: User;
 		}
 	}
 }
