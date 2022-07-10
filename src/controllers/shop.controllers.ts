@@ -116,7 +116,6 @@ export const postCart: RequestHandler = async (req, res) => {
 			item => item.productId === productId
 		);
 		if (selectedItem !== -1) {
-			console.log(selectedItem);
 			cartItems[selectedItem].quantity++;
 		} else {
 			cartItems.push({
@@ -150,7 +149,6 @@ export const postCartDeleteProduct: RequestHandler = async (req, res) => {
 	const { cartItemId } = req.body;
 
 	try {
-		console.log(req.user.cart?.items);
 		await prisma.user.update({
 			where: {
 				id: req.user.id,
