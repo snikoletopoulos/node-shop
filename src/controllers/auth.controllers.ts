@@ -22,7 +22,12 @@ export const postLogin: RequestHandler = async (req, res) => {
 			},
 		});
 
-		res.redirect("/login");
+		req.session.save(err => {
+			if (err) {
+				console.log(err);
+			}
+			res.redirect("/login");
+		});
 	} catch (error) {
 		console.log(error);
 	}
