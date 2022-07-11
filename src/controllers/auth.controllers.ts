@@ -15,6 +15,11 @@ export const postLogin: RequestHandler = async (req, res) => {
 			where: {
 				id: "627af4531f6eb14f3d128306",
 			},
+			select: {
+				id: true,
+				email: true,
+				name: true,
+			},
 		});
 
 		res.redirect("/login");

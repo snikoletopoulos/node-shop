@@ -153,15 +153,22 @@ export const postCartDeleteProduct: RequestHandler = async (req, res) => {
 	const { cartItemId } = req.body;
 
 	try {
+		const { cart } = await prisma.user.findUniqueOrThrow({
+			where: {
+				id: req.session.user.id,
+			},
+			select: {
+				cart: true,
+			},
+		});
+
 		await prisma.user.update({
 			where: {
 				id: req.session.user.id,
 			},
 			data: {
 				cart: {
-					items: req.session.user.cart?.items.filter(
-						item => item.productId !== cartItemId
-					),
+					items: cart?.items.filter(item => item.productId !== cartItemId),
 				},
 			},
 		});
@@ -175,8 +182,17 @@ export const postCartDeleteProduct: RequestHandler = async (req, res) => {
 export const postOrder: RequestHandler = async (req, res) => {
 	if (!req.session.user) return res.redirect("/");
 
-	const newOrder = req.session.user.cart?.items ?? [];
-	if (!newOrder) return;
+	const { cart } = await prisma.user.findUniqueOrThrow({
+		where: {
+			id: req.session.user.id,
+		},
+		select: {
+			cart: true,
+		},
+	});
+	const newOrder = cart?.items ?? [];
+
+	if (!newOrder.length) return res.status(400).redirect("/cart");
 
 	await prisma.order.create({
 		data: {
