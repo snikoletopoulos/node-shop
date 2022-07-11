@@ -26,7 +26,7 @@ export const postLogin: RequestHandler = async (req, res) => {
 			if (err) {
 				console.log(err);
 			}
-			res.redirect("/login");
+			res.redirect("/");
 		});
 	} catch (error) {
 		console.log(error);
@@ -40,4 +40,34 @@ export const postLogout: RequestHandler = async (req, res) => {
 		}
 		res.redirect("/");
 	});
+};
+
+export const getSignup: RequestHandler = (req, res) => {
+	res.render("auth/signup", {
+		path: "/signup",
+		pageTitle: "Signup",
+		isAuthenticated: !!req.session.user,
+	});
+};
+
+export const postSignup: RequestHandler = async (req, res) => {
+	const { name, email, password, confirmPassword } = req.body as {
+		[key: string]: string;
+	};
+
+	try {
+		await prisma.user.create({
+			data: {
+				email,
+				name,
+				password,
+				cart: { items: [] },
+			},
+		});
+
+		res.redirect("/login");
+	} catch (error) {
+		console.error(error);
+		res.redirect("/signup");
+	}
 };

@@ -49,6 +49,11 @@
 					Login
 				</a>
 			</li>
+			<li class="main-header__item">
+				<a class="<%= path === '/signup' ? 'active' : '' %>" href="/signup">
+					Signup
+				</a>
+			</li>
 			<% } %>
 		</ul>
 	</nav>
@@ -90,13 +95,21 @@
 		<% } %>
 	</ul>
 	<ul class="mobile-nav__item-list">
-		<li class="mobile-nav__item">
-			<a href="/login">Login</a>
-		</li>
-		<li class="mobile-nav">
-			<form action="/logout" method="post">
+		<% if (isAuthenticated) { %>
+		<li class="mobile-nav__item-list">
+			<form class="mobile-nav__item" action="/logout" method="post">
 				<button type="submit">Logout</button>
 			</form>
 		</li>
+		<% } else { %>
+		<li class="mobile-nav__item">
+			<a href="/login">Login</a>
+		</li>
+		<li class="mobile-nav__item">
+			<a class="<%= path === '/signup' ? 'active' : '' %>" href="/signup"></a>
+				Signup
+			</a>
+		</li>
+		<% } %>
 	</ul>
 </nav>

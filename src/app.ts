@@ -56,15 +56,5 @@ export const prisma = new PrismaClient();
 
 prisma
 	.$connect()
-	.then(async () => {
-		if (!(await prisma.user.findFirst())) {
-			await prisma.user.create({
-				data: {
-					name: "John Doe",
-					email: "example@example.com",
-				},
-			});
-		}
-		app.listen(3000);
-	})
+	.then(async () => app.listen(3000))
 	.catch(error => console.log(error));
