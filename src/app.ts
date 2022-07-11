@@ -4,11 +4,16 @@ import express from "express";
 import dotenv from "dotenv";
 import dotenvExpoand from "dotenv-expand";
 dotenvExpoand.expand(dotenv.config());
+import session from "express-session";
+import ConnectMongoDB from "connect-mongodb-session";
+const MongoDBStore = ConnectMongoDB(session);
 
 import adminRouter from "./routes/admin.routes";
 import shopRouter from "./routes/shop.routes";
 import { get404 } from "./controllers/error.controllers";
 import { PrismaClient } from "@prisma/client";
+
+if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is not defined");
 
 const app = express();
 
@@ -18,24 +23,23 @@ app.set("views", "src/views");
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
 
-app.use(async (req, res, next) => {
-	try {
-		const user = await prisma.user.findUnique({
-			where: {
-				id: "627af4531f6eb14f3d128306",
-			},
-		});
+if (!process.env.SESSION_SECRET)
+	throw new Error("SESSION_SECRET is not defined");
 
-		if (!user) {
-			throw new Error("User not found");
-		}
-
-		req.user = user;
-		next();
-	} catch (error) {
-		console.log(error);
-	}
-});
+app.use(
+	session({
+		secret: process.env.SESSION_SECRET,
+		resave: false,
+		saveUninitialized: false,
+		cookie: {
+			secure: process.env.NODE_ENV === "production",
+		},
+		store: new MongoDBStore({
+			uri: process.env.DATABASE_URL,
+			collection: "sessions",
+		}),
+	})
+);
 
 app.use("/admin", adminRouter);
 app.use(shopRouter);

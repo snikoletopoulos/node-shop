@@ -10,6 +10,7 @@ export const getProducts: RequestHandler = async (req, res) => {
 			path: "/products",
 			prods: products,
 			hasProducts: products.length > 0,
+			isAuthenticated: !!req.session.user,
 		});
 	} catch (error) {
 		console.log(error);
@@ -35,6 +36,7 @@ export const getProduct: RequestHandler = async (req, res, next) => {
 			product,
 			pageTitle: product.title,
 			path: "/products",
+			isAuthenticated: !!req.session.user,
 		});
 	} catch (error) {
 		next();
@@ -50,6 +52,7 @@ export const getIndex: RequestHandler = async (req, res) => {
 			pageTitle: "Shop",
 			path: "/",
 			prods: products,
+			isAuthenticated: !!req.session.user,
 		});
 	} catch (error) {
 		console.log(error);
@@ -86,6 +89,7 @@ export const getCart: RequestHandler = async (req, res) => {
 			pageTitle: "Your Cart",
 			path: "/cart",
 			products: cartProductsWithQuantity,
+			isAuthenticated: !!req.session.user,
 		});
 	} catch (error) {
 		console.log(error);
@@ -236,6 +240,7 @@ export const getOrders: RequestHandler = async (req, res) => {
 			pageTitle: "Your Orders",
 			path: "/orders",
 			orders: await Promise.all(fullOrders),
+			isAuthenticated: !!req.session.user,
 		});
 	} catch (error) {
 		console.log(error);

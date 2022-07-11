@@ -19,6 +19,7 @@
 					>Orders</a
 				>
 			</li>
+			<% if (isAuthenticated) { %>
 			<li class="main-header__item">
 				<a
 					class="<%= path === '/admin/add-product' ? 'active' : '' %>"
@@ -33,6 +34,7 @@
 					>Admin Products
 				</a>
 			</li>
+			<% } %>
 		</ul>
 	</nav>
 </header>
@@ -55,14 +57,22 @@
 				>Orders</a
 			>
 		</li>
-		<!-- <li class="mobile-nav__item">
-            <a class="<%= path === '/admin/add-product' ? 'active' : '' %>" href="/admin/add-product">Add Product
-            </a>
-        </li>
-        <li class="mobile-nav__item">
-            <a class="<%= path === '/admin/products' ? 'active' : '' %>" href="/admin/products">Admin Products
-            </a>
-        </li> -->
+		<% if (isAuthenticated) { %>
+		<li class="mobile-nav__item">
+			<a
+				class="<%= path === '/admin/add-product' ? 'active' : '' %>"
+				href="/admin/add-product"
+				>Add Product
+			</a>
+		</li>
+		<li class="mobile-nav__item">
+			<a
+				class="<%= path === '/admin/products' ? 'active' : '' %>"
+				href="/admin/products"
+				>Admin Products
+			</a>
+		</li>
+		<% } %>
 	</ul>
 	<ul>
 		<li class="main-header__item">
