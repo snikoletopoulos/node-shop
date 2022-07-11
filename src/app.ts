@@ -10,6 +10,7 @@ const MongoDBStore = ConnectMongoDB(session);
 
 import adminRouter from "./routes/admin.routes";
 import shopRouter from "./routes/shop.routes";
+import authRouter from "./routes/auth.routes";
 import { get404 } from "./controllers/error.controllers";
 import { PrismaClient } from "@prisma/client";
 
@@ -43,6 +44,7 @@ app.use(
 
 app.use("/admin", adminRouter);
 app.use(shopRouter);
+app.use(authRouter);
 
 app.use(get404);
 
