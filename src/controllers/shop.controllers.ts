@@ -61,11 +61,11 @@ export const getIndex: RequestHandler = async (req, res) => {
 
 export const getCart: RequestHandler = async (req, res) => {
 	try {
-		if (!req.user) return res.redirect("/");
+		if (!req.session.user) return res.redirect("/");
 
 		const user = await prisma.user.findUnique({
 			where: {
-				id: req.user.id,
+				id: req.session.user.id,
 			},
 		});
 
@@ -97,7 +97,7 @@ export const getCart: RequestHandler = async (req, res) => {
 };
 
 export const postCart: RequestHandler = async (req, res) => {
-	if (!req.user) return res.redirect("/");
+	if (!req.session.user) return res.redirect("/");
 
 	const { productId } = req.body as { productId: string };
 
@@ -110,7 +110,7 @@ export const postCart: RequestHandler = async (req, res) => {
 
 		const user = await prisma.user.findUniqueOrThrow({
 			where: {
-				id: req.user.id,
+				id: req.session.user.id,
 			},
 		});
 
@@ -130,7 +130,7 @@ export const postCart: RequestHandler = async (req, res) => {
 
 		await prisma.user.update({
 			where: {
-				id: req.user.id,
+				id: req.session.user.id,
 			},
 			data: {
 				v: {
@@ -149,17 +149,17 @@ export const postCart: RequestHandler = async (req, res) => {
 };
 
 export const postCartDeleteProduct: RequestHandler = async (req, res) => {
-	if (!req.user) return res.redirect("/");
+	if (!req.session.user) return res.redirect("/");
 	const { cartItemId } = req.body;
 
 	try {
 		await prisma.user.update({
 			where: {
-				id: req.user.id,
+				id: req.session.user.id,
 			},
 			data: {
 				cart: {
-					items: req.user.cart?.items.filter(
+					items: req.session.user.cart?.items.filter(
 						item => item.productId !== cartItemId
 					),
 				},
@@ -173,16 +173,16 @@ export const postCartDeleteProduct: RequestHandler = async (req, res) => {
 };
 
 export const postOrder: RequestHandler = async (req, res) => {
-	if (!req.user) return res.redirect("/");
+	if (!req.session.user) return res.redirect("/");
 
-	const newOrder = req.user.cart?.items ?? [];
+	const newOrder = req.session.user.cart?.items ?? [];
 	if (!newOrder) return;
 
 	await prisma.order.create({
 		data: {
 			user: {
 				connect: {
-					id: req.user.id,
+					id: req.session.user.id,
 				},
 			},
 			products: newOrder,
@@ -191,7 +191,7 @@ export const postOrder: RequestHandler = async (req, res) => {
 
 	await prisma.user.update({
 		where: {
-			id: req.user.id,
+			id: req.session.user.id,
 		},
 		data: {
 			cart: {
@@ -204,12 +204,12 @@ export const postOrder: RequestHandler = async (req, res) => {
 };
 
 export const getOrders: RequestHandler = async (req, res) => {
-	if (!req.user) return res.redirect("/");
+	if (!req.session.user) return res.redirect("/");
 
 	try {
 		const orders = await prisma.order.findMany({
 			where: {
-				userId: req.user.id,
+				userId: req.session.user.id,
 			},
 		});
 

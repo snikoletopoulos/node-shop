@@ -11,7 +11,7 @@ export const getAddProduct: RequestHandler = (req, res) => {
 };
 
 export const postAddProduct: RequestHandler = async (req, res) => {
-	if (!req.user) return res.redirect("/");
+	if (!req.session.user) return res.redirect("/");
 
 	const { title, imageUrl, description, price } = req.body;
 
@@ -24,7 +24,7 @@ export const postAddProduct: RequestHandler = async (req, res) => {
 				price: +price,
 				user: {
 					connect: {
-						id: req.user.id,
+						id: req.session.user.id,
 					},
 				},
 			},
