@@ -7,7 +7,6 @@ export const getLogin: RequestHandler = (req, res) => {
 	res.render("auth/login", {
 		pageTitle: "Login",
 		path: "/login",
-		isAuthenticated: !!req.session.user,
 	});
 };
 
@@ -61,7 +60,6 @@ export const getSignup: RequestHandler = (req, res) => {
 	res.render("auth/signup", {
 		path: "/signup",
 		pageTitle: "Signup",
-		isAuthenticated: !!req.session.user,
 	});
 };
 

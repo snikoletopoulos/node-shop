@@ -45,6 +45,7 @@ app.use(
 app.use(csrf());
 
 app.use((req, res, next) => {
+	res.locals.isAuthenticated = req.session.user;
 	res.locals.csrfToken = req.csrfToken();
 	next();
 });

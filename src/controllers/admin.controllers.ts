@@ -6,7 +6,6 @@ export const getAddProduct: RequestHandler = (req, res) => {
 		pageTitle: "Add Product",
 		path: "/admin/add-product",
 		editing: false,
-		isAuthenticated: !!req.session.user,
 	});
 };
 
@@ -62,7 +61,6 @@ export const getEditProduct: RequestHandler = async (req, res) => {
 			path: "/admin/edit-product",
 			editing: editMode,
 			product,
-			isAuthenticated: !!req.session.user,
 		});
 	} catch (error) {
 		console.log(error);
