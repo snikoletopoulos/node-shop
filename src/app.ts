@@ -7,6 +7,7 @@ dotenvExpoand.expand(dotenv.config());
 import session from "express-session";
 import ConnectMongoDB from "connect-mongodb-session";
 const MongoDBStore = ConnectMongoDB(session);
+import csrf from "csurf";
 
 import adminRouter from "./routes/admin.routes";
 import shopRouter from "./routes/shop.routes";
@@ -41,6 +42,12 @@ app.use(
 		}),
 	})
 );
+app.use(csrf());
+
+app.use((req, res, next) => {
+	res.locals.csrfToken = req.csrfToken();
+	next();
+});
 
 app.use("/admin", adminRouter);
 app.use(shopRouter);
