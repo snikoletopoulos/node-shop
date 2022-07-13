@@ -191,27 +191,28 @@ export const postOrder: RequestHandler = async (req, res) => {
 
 	if (!newOrder.length) return res.status(400).redirect("/cart");
 
-	await prisma.order.create({
-		data: {
-			user: {
-				connect: {
-					id: req.session.user.id,
+	prisma.$transaction([
+		prisma.order.create({
+			data: {
+				user: {
+					connect: {
+						id: req.session.user.id,
+					},
+				},
+				products: newOrder,
+			},
+		}),
+		prisma.user.update({
+			where: {
+				id: req.session.user.id,
+			},
+			data: {
+				cart: {
+					items: [],
 				},
 			},
-			products: newOrder,
-		},
-	});
-
-	await prisma.user.update({
-		where: {
-			id: req.session.user.id,
-		},
-		data: {
-			cart: {
-				items: [],
-			},
-		},
-	});
+		}),
+	]);
 
 	res.redirect("/orders");
 };
