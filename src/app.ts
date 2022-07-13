@@ -8,6 +8,7 @@ import session from "express-session";
 import ConnectMongoDB from "connect-mongodb-session";
 const MongoDBStore = ConnectMongoDB(session);
 import csrf from "csurf";
+import flash from "connect-flash";
 
 import adminRouter from "./routes/admin.routes";
 import shopRouter from "./routes/shop.routes";
@@ -43,6 +44,7 @@ app.use(
 	})
 );
 app.use(csrf());
+app.use(flash());
 
 app.use((req, res, next) => {
 	res.locals.isAuthenticated = req.session.user;

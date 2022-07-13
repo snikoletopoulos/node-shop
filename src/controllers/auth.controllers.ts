@@ -7,6 +7,7 @@ export const getLogin: RequestHandler = (req, res) => {
 	res.render("auth/login", {
 		pageTitle: "Login",
 		path: "/login",
+		errorMessage: req.flash("error").length ? req.flash("error") : null,
 	});
 };
 
@@ -42,6 +43,7 @@ export const postLogin: RequestHandler = async (req, res) => {
 			res.redirect("/");
 		});
 	} catch (error) {
+		req.flash("error", "Invalid credentials");
 		console.log(error);
 		res.redirect("/login");
 	}
@@ -60,6 +62,7 @@ export const getSignup: RequestHandler = (req, res) => {
 	res.render("auth/signup", {
 		path: "/signup",
 		pageTitle: "Signup",
+		errorMessage: req.flash("error").length ? req.flash("error") : null,
 	});
 };
 
@@ -80,6 +83,7 @@ export const postSignup: RequestHandler = async (req, res) => {
 
 		res.redirect("/login");
 	} catch (error) {
+		req.flash("error", "E-Mail already in use");
 		console.error(error);
 		res.redirect("/signup");
 	}
