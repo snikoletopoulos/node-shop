@@ -1,4 +1,6 @@
 import { RequestHandler } from "express";
+import bcrypt from "bcrypt";
+
 import { prisma } from "../app";
 
 export const getLogin: RequestHandler = (req, res) => {
@@ -10,17 +12,29 @@ export const getLogin: RequestHandler = (req, res) => {
 };
 
 export const postLogin: RequestHandler = async (req, res) => {
+	const { email, password } = req.body as { email: string; password: string };
 	try {
-		req.session.user = await prisma.user.findUniqueOrThrow({
-			where: {
-				id: "627af4531f6eb14f3d128306",
-			},
+		const user = await prisma.user.findUniqueOrThrow({
+			where: { email },
 			select: {
 				id: true,
 				email: true,
 				name: true,
+				password: true,
 			},
 		});
+
+		const isMatch = await bcrypt.compare(password, user.password);
+
+		if (!isMatch) {
+			throw new Error("Invalid credentials");
+		}
+
+		req.session.user = {
+			id: user.id,
+			email: user.email,
+			name: user.name,
+		};
 
 		req.session.save(err => {
 			if (err) {
@@ -30,6 +44,7 @@ export const postLogin: RequestHandler = async (req, res) => {
 		});
 	} catch (error) {
 		console.log(error);
+		res.redirect("/login");
 	}
 };
 
@@ -60,7 +75,7 @@ export const postSignup: RequestHandler = async (req, res) => {
 			data: {
 				email,
 				name,
-				password,
+				password: await bcrypt.hash(password, 12),
 				cart: { items: [] },
 			},
 		});
