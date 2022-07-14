@@ -1,13 +1,22 @@
 import { RequestHandler } from "express";
 import bcrypt from "bcrypt";
+import crypto from "crypto";
+import sgMail from "@sendgrid/mail";
 
 import { prisma } from "../app";
 
+if (!process.env.SENDGRID_API_KEY || !process.env.SENDGRID_FROM_EMAIL)
+	throw new Error("Sendgrid env variables are not defined");
+
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
 export const getLogin: RequestHandler = (req, res) => {
+	const message = req.flash("error");
+
 	res.render("auth/login", {
 		pageTitle: "Login",
 		path: "/login",
-		errorMessage: req.flash("error").length ? req.flash("error") : null,
+		errorMessage: message.length ? message : null,
 	});
 };
 
@@ -44,8 +53,14 @@ export const postLogin: RequestHandler = async (req, res) => {
 		});
 	} catch (error) {
 		req.flash("error", "Invalid credentials");
+		req.session.save(err => {
+			if (err) {
+				console.log(err);
+			}
+			res.redirect("/login");
+		});
 		console.log(error);
-		res.redirect("/login");
+		// return res.redirect("/login");
 	}
 };
 
@@ -59,10 +74,12 @@ export const postLogout: RequestHandler = async (req, res) => {
 };
 
 export const getSignup: RequestHandler = (req, res) => {
+	const message = req.flash("error");
+
 	res.render("auth/signup", {
 		path: "/signup",
 		pageTitle: "Signup",
-		errorMessage: req.flash("error").length ? req.flash("error") : null,
+		errorMessage: message.length ? message : null,
 	});
 };
 
@@ -81,10 +98,144 @@ export const postSignup: RequestHandler = async (req, res) => {
 			},
 		});
 
+		sgMail.send({
+			to: email,
+			from: process.env.SENDGRID_FROM_EMAIL ?? "",
+			subject: "Signup succeeded",
+			html: `<h1>You successfully signed up!</h1>`,
+		});
+
 		res.redirect("/login");
 	} catch (error) {
 		req.flash("error", "E-Mail already in use");
 		console.error(error);
 		res.redirect("/signup");
+	}
+};
+
+export const getReset: RequestHandler = (req, res) => {
+	const message = req.flash("error");
+
+	res.render("auth/reset", {
+		path: "/reset",
+		pageTitle: "Reset Password",
+		errorMessage: message.length ? message : null,
+	});
+};
+
+export const postReset: RequestHandler = async (req, res) => {
+	crypto.randomBytes(32, async (error, buffer) => {
+		if (error) {
+			console.log(error);
+			req.flash("error", "Something went wrong");
+			return res.redirect("/reset");
+		}
+
+		const token = buffer.toString("hex");
+
+		try {
+			const user = await prisma.user.findUniqueOrThrow({
+				where: { email: req.body.email },
+				select: { id: true, email: true },
+			});
+
+			await prisma.user.update({
+				where: { id: user.id },
+				data: {
+					resetToken: token,
+					resetTokenExpiration: new Date(Date.now() + 1000 * 60 * 60 * 1),
+				},
+			});
+
+			sgMail.send({
+				to: user.email,
+				from: process.env.SENDGRID_FROM_EMAIL ?? "",
+				subject: "Password reset",
+				html: `
+				<p>You requested a password reset. Click the link below to reset your password:</p>
+				<p>
+					<a href="http://localhost::3000/reset/${token}">Reset Password</a>
+				</p>`,
+			});
+
+			res.redirect("/login");
+		} catch (error) {
+			req.flash("error", "No user with that e-mail found");
+			return res.redirect("/reset");
+		}
+	});
+};
+
+export const getResetPassword: RequestHandler = async (req, res) => {
+	const token = req.params.token;
+
+	try {
+		const user = await prisma.user.findFirst({
+			where: {
+				resetToken: token,
+				resetTokenExpiration: {
+					gt: new Date(),
+				},
+			},
+		});
+
+		if (!user) throw new Error("Invalid token");
+
+		const message = req.flash("error");
+
+		res.render("auth/new-password", {
+			path: "/reset",
+			pageTitle: "Reset Password",
+			errorMessage: message.length ? message : null,
+			userId: user.id.toString(),
+			passwordToken: token,
+		});
+	} catch (error) {
+		console.log(error);
+		req.flash("error", "Invalid token");
+		res.redirect("/reset");
+	}
+};
+
+export const postResetPassword: RequestHandler = async (req, res) => {
+	const { password, confirmPassword, userId, passwordToken } = req.body as {
+		password: string;
+		confirmPassword: string;
+		userId: string;
+		passwordToken: string;
+	};
+
+	if (password !== confirmPassword) throw new Error("Passwords do not match");
+
+	try {
+		const user = await prisma.user.findFirst({
+			where: {
+				id: userId,
+				resetToken: passwordToken,
+				resetTokenExpiration: {
+					gt: new Date(),
+				},
+			},
+			select: { id: true, email: true },
+		});
+
+		if (!user) throw new Error("Invalid token");
+
+		await prisma.user.update({
+			where: {
+				id: user.id,
+			},
+			data: {
+				password: await bcrypt.hash(password, 12),
+				resetToken: undefined,
+				resetTokenExpiration: undefined,
+			},
+		});
+
+		res.redirect("/login");
+	} catch (error) {
+		console.log(error);
+		req.flash("error", "Invalid token");
+		res.redirect("/reset-password");
 	}
 };

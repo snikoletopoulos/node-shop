@@ -11,14 +11,16 @@ datasource db {
 }
 
 model User {
-  id       String    @id @default(auto()) @map("_id") @db.ObjectId
-  v        Int       @default(0) @map("__v")
-  name     String
-  email    String    @unique
-  password String
-  products Product[]
-  cart     Cart?
-  orders   Order[]
+  id                   String    @id @default(auto()) @map("_id") @db.ObjectId
+  v                    Int       @default(0) @map("__v")
+  name                 String
+  email                String    @unique
+  password             String
+  products             Product[]
+  cart                 Cart?
+  orders               Order[]
+  resetToken           String?
+  resetTokenExpiration DateTime?
 
   @@map("users")
 }
