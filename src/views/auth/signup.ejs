@@ -9,24 +9,24 @@
 	<main>
 		<form class="login-form" action="/signup" method="POST">
 			<% if (errorMessage) { %>
-			<div class="user-message user-message--error"><%= errorMessage %> </div>
+			<div class="user-message user-message--error"><%= errorMessage %></div>
 			<% } %>
 			<input type="hidden" name="_csrf" value="<%= csrfToken %>">
 			<div class="form-control">
 				<label for="name">Name</label>
-				<input type="text" name="name" id="name" required>
+				<input class="<%= validationErrors?.fieldErrors?.name ? 'invalid' : null %>" type="text" name="name" id="name" value="<%= initialValues?.name ?? "" %>" required>
 			</div>
 			<div class="form-control">
 				<label for="email">E-Mail</label>
-				<input type="email" name="email" id="email" required>
+				<input class="<%= validationErrors?.fieldErrors?.email ? 'invalid' : null %>" type="email" name="email" id="email" value="<%= initialValues?.email ?? "" %>" required>
 			</div>
 			<div class="form-control">
 				<label for="password">Password</label>
-				<input type="password" name="password" id="password" required>
+				<input class="<%= validationErrors?.fieldErrors?.password ? 'invalid' : null %>" type="password" name="password" id="password" required>
 			</div>
 			<div class="form-control">
 				<label for="confirmPassword">Confirm Password</label>
-				<input type="password" name="confirmPassword" id="confirmPassword" required>
+				<input class="<%= validationErrors?.fieldErrors?.confirmPassword ? 'invalid' : null %>" type="password" name="confirmPassword" id="confirmPassword" required>
 			</div>
 			<button class="btn" type="submit">Signup</button>
 		</form>

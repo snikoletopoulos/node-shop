@@ -2,6 +2,7 @@ import { RequestHandler } from "express";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import sgMail from "@sendgrid/mail";
+import * as z from "zod";
 
 import { prisma } from "../app";
 
@@ -80,13 +81,64 @@ export const getSignup: RequestHandler = (req, res) => {
 		path: "/signup",
 		pageTitle: "Signup",
 		errorMessage: message.length ? message : null,
+		initialValues: null,
+		validationErrors: null,
 	});
 };
 
+const postSignupSchema = z
+	.object({
+		name: z
+			.string()
+			.trim()
+			.min(1, { message: "Name must be at least 1 character" }),
+		email: z
+			.string()
+			.trim()
+			.email()
+			.refine(
+				async email =>
+					email
+						? !(await prisma.user.findUnique({
+								where: { email },
+						  }))
+						: true,
+				{ message: "Email already exists" }
+			),
+		password: z
+			.string()
+			.trim()
+			.min(5, { message: "Password must be at least 5 characters" }),
+		confirmPassword: z.string(),
+	})
+	.refine(({ password, confirmPassword }) => password === confirmPassword, {
+		message: "Passwords do not match",
+		path: ["confirmPassword"],
+	});
 export const postSignup: RequestHandler = async (req, res) => {
-	const { name, email, password, confirmPassword } = req.body as {
-		[key: string]: string;
-	};
+	let parsedBody: z.infer<typeof postSignupSchema>;
+	try {
+		parsedBody = await postSignupSchema.parseAsync(req.body);
+	} catch (error) {
+		if (!(error instanceof z.ZodError)) {
+			req.flash("error", "Invalid credentials");
+			return;
+		}
+		console.log(error.flatten());
+		res.status(422).render("auth/signup", {
+			path: "/signup",
+			pageTitle: "Signup",
+			errorMessage: error.issues.map(error => error.message).join("\n"),
+			initialValues: {
+				name: req.body.name,
+				email: req.body.email,
+			},
+			validationErrors: error.flatten(),
+		});
+		return;
+	}
+
+	const { name, email, password } = parsedBody;
 
 	try {
 		await prisma.user.create({
@@ -107,8 +159,6 @@ export const postSignup: RequestHandler = async (req, res) => {
 
 		res.redirect("/login");
 	} catch (error) {
-		req.flash("error", "E-Mail already in use");
-		console.error(error);
 		res.redirect("/signup");
 	}
 };
