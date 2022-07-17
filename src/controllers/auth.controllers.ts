@@ -21,24 +21,38 @@ export const getLogin: RequestHandler = (req, res) => {
 	});
 };
 
+const postLoginSchema = z
+	.object({
+		email: z
+			.string()
+			.email()
+			.refine(email =>
+				prisma.user.findUnique({
+					where: { email },
+				})
+			),
+		password: z.string().min(1),
+	})
+	.refine(async ({ email, password }) => {
+		const user = await prisma.user.findUnique({
+			where: { email },
+		});
+		if (!user) return false;
+
+		return bcrypt.compare(password, user.password);
+	});
+
 export const postLogin: RequestHandler = async (req, res) => {
-	const { email, password } = req.body as { email: string; password: string };
 	try {
+		const { email } = await postLoginSchema.parseAsync(req.body);
 		const user = await prisma.user.findUniqueOrThrow({
 			where: { email },
 			select: {
 				id: true,
 				email: true,
 				name: true,
-				password: true,
 			},
 		});
-
-		const isMatch = await bcrypt.compare(password, user.password);
-
-		if (!isMatch) {
-			throw new Error("Invalid credentials");
-		}
 
 		req.session.user = {
 			id: user.id,
@@ -52,16 +66,24 @@ export const postLogin: RequestHandler = async (req, res) => {
 			}
 			res.redirect("/");
 		});
-	} catch (error) {
+	} catch (errors) {
+		if (!(errors instanceof z.ZodError)) throw errors;
+
 		req.flash("error", "Invalid credentials");
-		req.session.save(err => {
-			if (err) {
-				console.log(err);
+		const zodErrors = errors;
+		req.session.save(error => {
+			if (error) {
+				console.log(error);
 			}
-			res.redirect("/login");
+			res.status(422).render("auth/login", {
+				pageTitle: "Login",
+				path: "/login",
+				initialValues: {
+					email: req.body.email,
+				},
+				validationErrors: zodErrors.flatten(),
+			});
 		});
-		console.log(error);
-		// return res.redirect("/login");
 	}
 };
 
@@ -115,14 +137,14 @@ const postSignupSchema = z
 		message: "Passwords do not match",
 		path: ["confirmPassword"],
 	});
+
 export const postSignup: RequestHandler = async (req, res) => {
 	let parsedBody: z.infer<typeof postSignupSchema>;
 	try {
 		parsedBody = await postSignupSchema.parseAsync(req.body);
 	} catch (error) {
 		if (!(error instanceof z.ZodError)) {
-			req.flash("error", "Invalid credentials");
-			return;
+			throw error;
 		}
 		console.log(error.flatten());
 		res.status(422).render("auth/signup", {
