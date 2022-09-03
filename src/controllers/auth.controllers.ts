@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import crypto from "crypto";
 import sgMail from "@sendgrid/mail";
 import * as z from "zod";
+import validator from "validator";
 
 import { prisma } from "../app";
 
@@ -18,6 +19,7 @@ export const getLogin: RequestHandler = (req, res) => {
 		pageTitle: "Login",
 		path: "/login",
 		errorMessage: message.length ? message : null,
+		validationErrors: [],
 	});
 };
 
@@ -68,9 +70,9 @@ export const postLogin: RequestHandler = async (req, res) => {
 		});
 	} catch (errors) {
 		if (!(errors instanceof z.ZodError)) throw errors;
+		const zodErrors = errors;
 
 		req.flash("error", "Invalid credentials");
-		const zodErrors = errors;
 		req.session.save(error => {
 			if (error) {
 				console.log(error);
@@ -78,6 +80,7 @@ export const postLogin: RequestHandler = async (req, res) => {
 			res.status(422).render("auth/login", {
 				pageTitle: "Login",
 				path: "/login",
+				errorMessage: zodErrors.issues.map(error => error.message).join("\n"),
 				initialValues: {
 					email: req.body.email,
 				},
@@ -118,6 +121,19 @@ const postSignupSchema = z
 			.string()
 			.trim()
 			.email()
+			.transform((email, ctx) => {
+				const result = validator.normalizeEmail(email);
+
+				if (!result) {
+					ctx.addIssue({
+						message: "Invalid email",
+						code: z.ZodIssueCode.custom,
+					});
+					return email;
+				}
+
+				return result;
+			})
 			.refine(
 				async email =>
 					email
