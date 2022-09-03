@@ -1,16 +1,38 @@
 import type { RequestHandler } from "express";
+import { z } from "zod";
+import validator from "validator";
 
 import { prisma } from "../app";
 
+const ITEMS_PER_PAGE = 2;
+
+const paginationQueryParams = z.object({
+	page: z
+		.string()
+		.refine(page => validator.isNumeric(page))
+		.transform(Number)
+		.optional(),
+});
+
 export const getProducts: RequestHandler = async (req, res, next) => {
+	const { page = 1 } = paginationQueryParams.parse(req.query);
+
 	try {
-		const products = await prisma.product.findMany();
+		const productCount = await prisma.product.count();
+		const products = await prisma.product.findMany({
+			skip: ITEMS_PER_PAGE * (page - 1),
+			take: ITEMS_PER_PAGE,
+		});
 
 		res.render("shop/product-list", {
 			pageTitle: "All Products",
 			path: "/products",
 			prods: products,
 			hasProducts: products.length > 0,
+			currentPage: page,
+			hasNextPage: ITEMS_PER_PAGE * page < productCount,
+			hasPreviousPage: page > 1,
+			lastPage: Math.ceil(productCount / ITEMS_PER_PAGE),
 		});
 	} catch (error) {
 		if (!(error instanceof Error)) throw error;
@@ -53,13 +75,23 @@ export const getProduct: RequestHandler = async (req, res, next) => {
 };
 
 export const getIndex: RequestHandler = async (req, res, next) => {
+	const { page = 1 } = paginationQueryParams.parse(req.query);
+
 	try {
-		const products = await prisma.product.findMany();
+		const productCount = await prisma.product.count();
+		const products = await prisma.product.findMany({
+			skip: ITEMS_PER_PAGE * (page - 1),
+			take: ITEMS_PER_PAGE,
+		});
 
 		res.render("shop/index", {
 			pageTitle: "Shop",
 			path: "/",
 			prods: products,
+			currentPage: page,
+			hasNextPage: ITEMS_PER_PAGE * page < productCount,
+			hasPreviousPage: page > 1,
+			lastPage: Math.ceil(productCount / ITEMS_PER_PAGE),
 		});
 	} catch (error) {
 		if (!(error instanceof Error)) throw error;
