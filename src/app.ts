@@ -13,11 +13,8 @@ import flash from "connect-flash";
 import adminRouter from "./routes/admin.routes";
 import shopRouter from "./routes/shop.routes";
 import authRouter from "./routes/auth.routes";
-import {
-	errorMidleware,
-	get404,
-	get500,
-} from "./controllers/error.controllers";
+import { get404, get500 } from "./controllers/error.controllers";
+import { errorMidleware } from "./middleware/error.middleware";
 import { PrismaClient } from "@prisma/client";
 
 if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is not defined");
