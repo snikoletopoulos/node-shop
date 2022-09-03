@@ -204,9 +204,13 @@ export const getProducts: RequestHandler = async (req, res) => {
 	});
 };
 
-export const postDeleteProduct: RequestHandler = async (req, res, next) => {
+const deleteProductSchema = z.object({
+	productId: z.string(),
+});
+
+export const deleteProduct: RequestHandler = async (req, res, next) => {
 	if (!req.session.user) return res.redirect("/");
-	const { productId } = req.body;
+	const { productId } = deleteProductSchema.parse(req.params);
 
 	try {
 		await prisma.product.findFirstOrThrow({
@@ -223,14 +227,9 @@ export const postDeleteProduct: RequestHandler = async (req, res, next) => {
 				id: productId,
 			},
 		});
-	} catch (error) {
-		if (!(error instanceof Error)) throw error;
-		const customError = {
-			...error,
-			httpCode: 500,
-		};
-		next(customError);
-	}
 
-	res.redirect("/admin/products");
+		res.status(200).json({ message: "Success!" });
+	} catch (error) {
+		res.status(500).json({ message: "Deleting product failed" });
+	}
 };
