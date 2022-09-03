@@ -1,8 +1,19 @@
-import type { RequestHandler } from "express";
+import type { ErrorRequestHandler, RequestHandler } from "express";
 
 export const get404: RequestHandler = (req, res) => {
 	res.status(404).render("404", {
 		pageTitle: "Page Not Found",
 		path: "/404",
 	});
+};
+
+export const get500: RequestHandler = (req, res) => {
+	res.status(500).render("500", {
+		pageTitle: "Error",
+		path: "/500",
+	});
+};
+
+export const errorMidleware: ErrorRequestHandler = (error, req, res, next) => {
+	res.redirect("/500");
 };

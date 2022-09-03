@@ -2,7 +2,7 @@ import type { RequestHandler } from "express";
 
 import { prisma } from "../app";
 
-export const getProducts: RequestHandler = async (req, res) => {
+export const getProducts: RequestHandler = async (req, res, next) => {
 	try {
 		const products = await prisma.product.findMany();
 
@@ -13,7 +13,12 @@ export const getProducts: RequestHandler = async (req, res) => {
 			hasProducts: products.length > 0,
 		});
 	} catch (error) {
-		console.log(error);
+		if (!(error instanceof Error)) throw error;
+		const customError = {
+			...error,
+			httpCode: 500,
+		};
+		next(customError);
 	}
 };
 
@@ -38,12 +43,16 @@ export const getProduct: RequestHandler = async (req, res, next) => {
 			path: "/products",
 		});
 	} catch (error) {
-		next();
-		return;
+		if (!(error instanceof Error)) throw error;
+		const customError = {
+			...error,
+			httpCode: 500,
+		};
+		next(customError);
 	}
 };
 
-export const getIndex: RequestHandler = async (req, res) => {
+export const getIndex: RequestHandler = async (req, res, next) => {
 	try {
 		const products = await prisma.product.findMany();
 
@@ -53,11 +62,16 @@ export const getIndex: RequestHandler = async (req, res) => {
 			prods: products,
 		});
 	} catch (error) {
-		console.log(error);
+		if (!(error instanceof Error)) throw error;
+		const customError = {
+			...error,
+			httpCode: 500,
+		};
+		next(customError);
 	}
 };
 
-export const getCart: RequestHandler = async (req, res) => {
+export const getCart: RequestHandler = async (req, res, next) => {
 	try {
 		if (!req.session.user) return res.redirect("/");
 
@@ -89,11 +103,16 @@ export const getCart: RequestHandler = async (req, res) => {
 			products: cartProductsWithQuantity,
 		});
 	} catch (error) {
-		console.log(error);
+		if (!(error instanceof Error)) throw error;
+		const customError = {
+			...error,
+			httpCode: 500,
+		};
+		next(customError);
 	}
 };
 
-export const postCart: RequestHandler = async (req, res) => {
+export const postCart: RequestHandler = async (req, res, next) => {
 	if (!req.session.user) return res.redirect("/");
 
 	const { productId } = req.body as { productId: string };
@@ -141,11 +160,16 @@ export const postCart: RequestHandler = async (req, res) => {
 
 		res.redirect("/cart");
 	} catch (error) {
-		console.log(error);
+		if (!(error instanceof Error)) throw error;
+		const customError = {
+			...error,
+			httpCode: 500,
+		};
+		next(customError);
 	}
 };
 
-export const postCartDeleteProduct: RequestHandler = async (req, res) => {
+export const postCartDeleteProduct: RequestHandler = async (req, res, next) => {
 	if (!req.session.user) return res.redirect("/");
 	const { cartItemId } = req.body;
 
@@ -172,11 +196,16 @@ export const postCartDeleteProduct: RequestHandler = async (req, res) => {
 
 		res.redirect("/cart");
 	} catch (error) {
-		console.log(error);
+		if (!(error instanceof Error)) throw error;
+		const customError = {
+			...error,
+			httpCode: 500,
+		};
+		next(customError);
 	}
 };
 
-export const postOrder: RequestHandler = async (req, res) => {
+export const postOrder: RequestHandler = async (req, res, next) => {
 	if (!req.session.user) return res.redirect("/");
 
 	const { cart } = await prisma.user.findUniqueOrThrow({
@@ -191,33 +220,42 @@ export const postOrder: RequestHandler = async (req, res) => {
 
 	if (!newOrder.length) return res.status(400).redirect("/cart");
 
-	prisma.$transaction([
-		prisma.order.create({
-			data: {
-				user: {
-					connect: {
-						id: req.session.user.id,
+	try {
+		prisma.$transaction([
+			prisma.order.create({
+				data: {
+					user: {
+						connect: {
+							id: req.session.user.id,
+						},
+					},
+					products: newOrder,
+				},
+			}),
+			prisma.user.update({
+				where: {
+					id: req.session.user.id,
+				},
+				data: {
+					cart: {
+						items: [],
 					},
 				},
-				products: newOrder,
-			},
-		}),
-		prisma.user.update({
-			where: {
-				id: req.session.user.id,
-			},
-			data: {
-				cart: {
-					items: [],
-				},
-			},
-		}),
-	]);
+			}),
+		]);
+	} catch (error) {
+		if (!(error instanceof Error)) throw error;
+		const customError = {
+			...error,
+			httpCode: 500,
+		};
+		next(customError);
+	}
 
 	res.redirect("/orders");
 };
 
-export const getOrders: RequestHandler = async (req, res) => {
+export const getOrders: RequestHandler = async (req, res, next) => {
 	if (!req.session.user) return res.redirect("/");
 
 	try {
@@ -256,6 +294,11 @@ export const getOrders: RequestHandler = async (req, res) => {
 			orders: await Promise.all(fullOrders),
 		});
 	} catch (error) {
-		console.log(error);
+		if (!(error instanceof Error)) throw error;
+		const customError = {
+			...error,
+			httpCode: 500,
+		};
+		next(customError);
 	}
 };

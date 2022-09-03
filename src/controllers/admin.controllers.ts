@@ -25,7 +25,7 @@ const postProductSchema = z.object({
 	imageUrl: z.string().refine(url => validator.isURL(url)),
 });
 
-export const postAddProduct: RequestHandler = async (req, res) => {
+export const postAddProduct: RequestHandler = async (req, res, next) => {
 	if (!req.session.user) return res.redirect("/");
 
 	let requestBody: z.infer<typeof postProductSchema>;
@@ -64,11 +64,16 @@ export const postAddProduct: RequestHandler = async (req, res) => {
 
 		res.redirect("/");
 	} catch (error) {
-		console.log(error);
+		if (!(error instanceof Error)) throw error;
+		const customError = {
+			...error,
+			httpCode: 500,
+		};
+		next(customError);
 	}
 };
 
-export const getEditProduct: RequestHandler = async (req, res) => {
+export const getEditProduct: RequestHandler = async (req, res, next) => {
 	const editMode = req.query.edit;
 
 	if (!editMode) {
@@ -97,17 +102,18 @@ export const getEditProduct: RequestHandler = async (req, res) => {
 			hasErrors: false,
 		});
 	} catch (error) {
-		console.log(error);
-		res.redirect("/");
+		if (!(error instanceof Error)) throw error;
+		const customError = {
+			...error,
+			httpCode: 500,
+		};
+		next(customError);
 	}
 };
 
 const postEditProductSchema = z.object({
-	title: z
-		.string()
-		.min(3)
-		.trim()
-		.refine(title => validator.isAlphanumeric(title)),
+	productId: z.string().min(1),
+	title: z.string().min(3).trim(),
 	imageUrl: z
 		.string()
 		.min(5)
@@ -118,11 +124,31 @@ const postEditProductSchema = z.object({
 	description: z.string().min(5).max(400).trim(),
 });
 
-export const postEditProduct: RequestHandler = async (req, res) => {
+export const postEditProduct: RequestHandler = async (req, res, next) => {
 	if (!req.session.user) return res.redirect("/");
-	const { productId, title, imageUrl, description, price } = req.body as {
-		[x: string]: string;
-	};
+
+	let requestBody: z.infer<typeof postEditProductSchema>;
+	try {
+		requestBody = postEditProductSchema.parse(req.body);
+	} catch (error) {
+		if (!(error instanceof z.ZodError)) throw error;
+
+		res.status(422).render("admin/edit-product", {
+			pageTitle: "Edit Product",
+			path: "/admin/edit-product",
+			editing: true,
+			product: {
+				...req.body,
+				id: req.body.productId,
+			},
+			hasErrors: true,
+			validationErrors: error.flatten(),
+			errorMessage: error.issues.map(error => error.message).join("\n"),
+		});
+		return;
+	}
+
+	const { productId, title, imageUrl, description, price } = requestBody;
 
 	try {
 		const product = await prisma.product.findFirst({
@@ -150,7 +176,12 @@ export const postEditProduct: RequestHandler = async (req, res) => {
 
 		res.redirect("/admin/products");
 	} catch (error) {
-		console.log(error);
+		if (!(error instanceof Error)) throw error;
+		const customError = {
+			...error,
+			httpCode: 500,
+		};
+		next(customError);
 	}
 };
 
@@ -173,7 +204,7 @@ export const getProducts: RequestHandler = async (req, res) => {
 	});
 };
 
-export const postDeleteProduct: RequestHandler = async (req, res) => {
+export const postDeleteProduct: RequestHandler = async (req, res, next) => {
 	if (!req.session.user) return res.redirect("/");
 	const { productId } = req.body;
 
@@ -193,7 +224,12 @@ export const postDeleteProduct: RequestHandler = async (req, res) => {
 			},
 		});
 	} catch (error) {
-		console.log(error);
+		if (!(error instanceof Error)) throw error;
+		const customError = {
+			...error,
+			httpCode: 500,
+		};
+		next(customError);
 	}
 
 	res.redirect("/admin/products");
