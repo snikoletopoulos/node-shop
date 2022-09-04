@@ -237,6 +237,52 @@ export const postCartDeleteProduct: RequestHandler = async (req, res, next) => {
 	}
 };
 
+export const getCheckout: RequestHandler = async (req, res, next) => {
+	if (!req.session.user) return res.redirect("/");
+
+	try {
+		const user = await prisma.user.findUnique({
+			where: {
+				id: req.session.user.id,
+			},
+		});
+
+		const cart = user?.cart;
+
+		const cartProducts = await prisma.product.findMany({
+			where: {
+				id: {
+					in: cart?.items.map(item => item.productId),
+				},
+			},
+		});
+
+		const cartProductsWithQuantity = cartProducts.map(product => ({
+			...product,
+			quantity:
+				cart?.items.find(item => item.productId === product.id)?.quantity ?? 0,
+		}));
+
+		const totalSum = cartProductsWithQuantity.reduce((total, product) => {
+			return total + product.price * product.quantity;
+		}, 0);
+
+		res.render("shop/checkout", {
+			pageTitle: "Checkout",
+			path: "/checkout",
+			products: cartProductsWithQuantity,
+			totalSum,
+		});
+	} catch (error) {
+		if (!(error instanceof Error)) throw error;
+		const customError = {
+			...error,
+			httpCode: 500,
+		};
+		next(customError);
+	}
+};
+
 export const postOrder: RequestHandler = async (req, res, next) => {
 	if (!req.session.user) return res.redirect("/");
 
