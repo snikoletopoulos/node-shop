@@ -1,6 +1,7 @@
 import path from "path";
 import express from "express";
 
+import { PrismaClient } from "@prisma/client";
 import dotenv from "dotenv";
 import dotenvExpoand from "dotenv-expand";
 dotenvExpoand.expand(dotenv.config());
@@ -9,13 +10,15 @@ import ConnectMongoDB from "connect-mongodb-session";
 const MongoDBStore = ConnectMongoDB(session);
 import csrf from "csurf";
 import flash from "connect-flash";
+import compression from "compression";
+import morgan from "morgan";
+import helmet from "helmet";
 
 import adminRouter from "./routes/admin.routes";
 import shopRouter from "./routes/shop.routes";
 import authRouter from "./routes/auth.routes";
 import { get404, get500 } from "./controllers/error.controllers";
 import { errorMidleware } from "./middleware/error.middleware";
-import { PrismaClient } from "@prisma/client";
 
 if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is not defined");
 
@@ -46,6 +49,9 @@ app.use(
 );
 app.use(csrf());
 app.use(flash());
+app.use(morgan(process.env.NODE_ENV === "development" ? "dev" : "tiny"));
+app.use(compression());
+app.use(helmet());
 
 app.use((req, res, next) => {
 	res.locals.isAuthenticated = req.session.user;
