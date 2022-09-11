@@ -1,18 +1,18 @@
 import path from "path";
 import express from "express";
 
-import { PrismaClient } from "@prisma/client";
 import dotenv from "dotenv";
 import dotenvExpoand from "dotenv-expand";
 dotenvExpoand.expand(dotenv.config());
+
 import session from "express-session";
 import ConnectMongoDB from "connect-mongodb-session";
-const MongoDBStore = ConnectMongoDB(session);
 import csrf from "csurf";
 import flash from "connect-flash";
 import compression from "compression";
 import morgan from "morgan";
 import helmet from "helmet";
+import { PrismaClient } from "@prisma/client";
 
 import adminRouter from "./routes/admin.routes";
 import shopRouter from "./routes/shop.routes";
@@ -21,6 +21,7 @@ import { get404, get500 } from "./controllers/error.controllers";
 import { errorMidleware } from "./middleware/error.middleware";
 
 if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is not defined");
+const MongoDBStore = ConnectMongoDB(session);
 
 const app = express();
 
@@ -78,4 +79,4 @@ export const prisma = new PrismaClient();
 prisma
 	.$connect()
 	.then(async () => app.listen(3000))
-	.catch(error => console.log(error));
+	.catch(console.log);
