@@ -19,8 +19,9 @@ const postProductSchema = z.object({
 	title: z.string().min(1).trim(),
 	price: z
 		.string()
-		.min(0)
-		.transform(price => +price),
+		.min(1)
+		.transform(Number)
+		.refine(price => price > 0, "Price must be greater than 0"),
 	description: z.string().min(5).max(400),
 	imageUrl: z.string().refine(url => validator.isURL(url)),
 });
