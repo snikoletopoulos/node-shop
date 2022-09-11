@@ -29,6 +29,7 @@ app.set("views", "src/views");
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
+app.use("/images", express.static(path.join(process.cwd(), "images")));
 
 if (!process.env.SESSION_SECRET)
 	throw new Error("SESSION_SECRET is not defined");

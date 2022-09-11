@@ -10,15 +10,14 @@
 		<% if (errorMessage) { %>
 		<div class="user-message user-message--error"><%= errorMessage %> </div>
 		<% } %>
-		<form class="product-form" action="/admin/<% if (editing || hasErrors) { %>edit-product<% } else { %>add-product<% } %>" method="POST">
-			<input type="hidden" name="_csrf" value="<%= csrfToken %>">
+		<form class="product-form" action="/admin/<% if (editing) { %>edit-product<% } else { %>add-product<% } %>/?_csrf=<%= csrfToken %>" method="POST" enctype="multipart/form-data">
 			<div class="form-control">
 				<label for="title">Title</label>
 				<input type="text" class="<%= validationErrors?.fieldErrors?.title ? 'invalid' : null %>" name="title" id="title" value="<% if (editing || hasErrors) { %><%= product.title %><% } %>">
 			</div>
 			<div class="form-control">
-				<label for="imageUrl">Image URL</label>
-				<input type="text" class="<%= validationErrors?.fieldErrors?.imageUrl ? 'invalid' : null %>" name="imageUrl"  id="imageUrl" value="<% if (editing || hasErrors) { %><%= product.imageUrl %><% } %>">
+				<label for="imageUrl">Image</label>
+				<input type="file" class="<%= validationErrors?.fieldErrors?.image ? 'invalid' : null %>" name="image" id="image">
 			</div>
 			<div class="form-control">
 				<label for="price">Price</label>

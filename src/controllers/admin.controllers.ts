@@ -23,17 +23,34 @@ const postProductSchema = z.object({
 		.transform(Number)
 		.refine(price => price > 0, "Price must be greater than 0"),
 	description: z.string().min(5).max(400),
-	imageUrl: z.string().refine(url => validator.isURL(url)),
 });
 
 export const postAddProduct: RequestHandler = async (req, res, next) => {
 	if (!req.session.user) return res.redirect("/");
 
 	let requestBody: z.infer<typeof postProductSchema>;
+	let hasImageErrors = false;
+	if (!req.file || !req.file.path) {
+		hasImageErrors = true;
+	}
 	try {
 		requestBody = postProductSchema.parse(req.body);
+		if (hasImageErrors) {
+			throw new z.ZodError([
+				{ code: "custom", message: "Image is required", path: ["image"] },
+			]);
+		}
 	} catch (error) {
-		if (!(error instanceof z.ZodError)) throw error;
+		if (!(error instanceof z.ZodError) || !(error instanceof Error))
+			throw error;
+
+		if (hasImageErrors) {
+			error.addIssue({
+				path: ["image"],
+				code: "custom",
+				message: "Image is required",
+			});
+		}
 
 		res.status(422).render("admin/edit-product", {
 			pageTitle: "Add Product",
@@ -46,13 +63,13 @@ export const postAddProduct: RequestHandler = async (req, res, next) => {
 		});
 		return;
 	}
-	const { title, imageUrl, description, price } = requestBody;
+	const { title, description, price } = requestBody;
 
 	try {
 		await prisma.product.create({
 			data: {
 				title,
-				imageUrl,
+				imageUrl: req.file?.path ?? "",
 				description,
 				price: +price,
 				user: {
@@ -115,12 +132,6 @@ export const getEditProduct: RequestHandler = async (req, res, next) => {
 const postEditProductSchema = z.object({
 	productId: z.string().min(1),
 	title: z.string().min(3).trim(),
-	imageUrl: z
-		.string()
-		.min(5)
-		.max(400)
-		.trim()
-		.refine(url => validator.isURL(url)),
 	price: z.number(),
 	description: z.string().min(5).max(400).trim(),
 });
@@ -149,7 +160,7 @@ export const postEditProduct: RequestHandler = async (req, res, next) => {
 		return;
 	}
 
-	const { productId, title, imageUrl, description, price } = requestBody;
+	const { productId, title, description, price } = requestBody;
 
 	try {
 		const product = await prisma.product.findFirst({
@@ -169,7 +180,7 @@ export const postEditProduct: RequestHandler = async (req, res, next) => {
 			},
 			data: {
 				title,
-				imageUrl,
+				imageUrl: req.file?.path ?? product.imageUrl,
 				description,
 				price: +price,
 			},
