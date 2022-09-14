@@ -6,4 +6,7 @@ data
 .env.*.local
 .env
 .DS_Store
+*.cert
+*.key
 images
+invoices

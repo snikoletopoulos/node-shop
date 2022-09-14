@@ -51,7 +51,7 @@ app.use(
 );
 app.use(csrf());
 app.use(flash());
-app.use(morgan(process.env.NODE_ENV === "development" ? "dev" : "tiny"));
+app.use(morgan(process.env.NODE_ENV === "development" ? "dev" : "combined"));
 app.use(compression());
 app.use(helmet());
 
@@ -78,5 +78,5 @@ export const prisma = new PrismaClient();
 
 prisma
 	.$connect()
-	.then(async () => app.listen(3000))
+	.then(async () => app.listen(process.env.PORT ?? 3000))
 	.catch(console.log);
