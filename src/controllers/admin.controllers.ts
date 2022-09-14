@@ -1,6 +1,6 @@
 import type { RequestHandler } from "express";
 import * as z from "zod";
-import validator from "validator";
+import fs from "fs/promises";
 
 import { prisma } from "../app";
 
@@ -174,6 +174,10 @@ export const postEditProduct: RequestHandler = async (req, res, next) => {
 
 		if (!product) throw new Error("Product not found");
 
+		if (req.file?.path) {
+			fs.unlink(product.imageUrl);
+		}
+
 		await prisma.product.update({
 			where: {
 				id: productId,
@@ -225,7 +229,7 @@ export const deleteProduct: RequestHandler = async (req, res, next) => {
 	const { productId } = deleteProductSchema.parse(req.params);
 
 	try {
-		await prisma.product.findFirstOrThrow({
+		const product = await prisma.product.findFirstOrThrow({
 			where: {
 				id: productId,
 				user: {
@@ -233,6 +237,10 @@ export const deleteProduct: RequestHandler = async (req, res, next) => {
 				},
 			},
 		});
+
+		if (product.imageUrl) {
+			fs.unlink(product.imageUrl);
+		}
 
 		await prisma.product.delete({
 			where: {
