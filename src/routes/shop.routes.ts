@@ -10,6 +10,7 @@ import {
 	postCart,
 	postCartDeleteProduct,
 	postOrder,
+	getInvoice,
 } from "../controllers/shop.controllers";
 import { isAuth } from "../middleware/auth.middleware";
 
@@ -32,5 +33,7 @@ router.get("/checkout", isAuth, getCheckout);
 router.post("/create-order", isAuth, postOrder);
 
 router.get("/orders", isAuth, getOrders);
+
+router.get("/orders/:orderId", isAuth, getInvoice);
 
 export default router;

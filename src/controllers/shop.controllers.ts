@@ -1,8 +1,12 @@
 import type { RequestHandler } from "express";
 import { z } from "zod";
 import validator from "validator";
+import fs from "fs";
+import path from "path";
+import PDFDocument from "pdfkit";
 
 import { prisma } from "../app";
+import { Order } from "@prisma/client";
 
 const ITEMS_PER_PAGE = 2;
 
@@ -378,5 +382,70 @@ export const getOrders: RequestHandler = async (req, res, next) => {
 			httpCode: 500,
 		};
 		next(customError);
+	}
+};
+
+export const getInvoice: RequestHandler = async (req, res, next) => {
+	const { orderId } = req.params;
+
+	let order: Order;
+	try {
+		order = await prisma.order.findUniqueOrThrow({
+			where: {
+				id: orderId,
+			},
+		});
+
+		if (order.userId !== req.session.user?.id) {
+			return next(new Error("Unauthorized"));
+		}
+	} catch (error) {
+		next(error);
+		return;
+	}
+
+	try {
+		const invoiceName = "invoice-" + orderId + ".pdf";
+		const invoicePath = path.join(process.cwd(), "invoices", invoiceName);
+
+		res.setHeader("Content-Type", "application/pdf");
+		res.setHeader("Content-Disposition", `inline; filename="${invoiceName}"`);
+
+		const pdfDoc = new PDFDocument();
+		pdfDoc.pipe(fs.createWriteStream(invoicePath));
+		pdfDoc.pipe(res);
+
+		pdfDoc.fontSize(26).text("Invoice", {
+			underline: true,
+		});
+
+		pdfDoc.text("---------------------");
+		let totalPrice = 0;
+		order.products.forEach(async product => {
+			const productData = await prisma.product.findUniqueOrThrow({
+				where: {
+					id: product.productId,
+				},
+			});
+
+			totalPrice += productData.price * product.quantity;
+
+			pdfDoc
+				.fontSize(14)
+				.text(
+					productData.title +
+						" - " +
+						product.quantity +
+						" x $" +
+						productData.price
+				);
+		});
+
+		pdfDoc.text("---");
+		pdfDoc.fontSize(20).text("Total Price: $" + totalPrice);
+
+		pdfDoc.end();
+	} catch (error) {
+		next(error);
 	}
 };
