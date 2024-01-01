@@ -9,7 +9,7 @@ import {
 	getCheckout,
 	postCart,
 	postCartDeleteProduct,
-	postOrder,
+	getCheckoutSuccess,
 	getInvoice,
 } from "../controllers/shop.controllers";
 import { isAuth } from "../middleware/auth.middleware";
@@ -30,7 +30,9 @@ router.post("/cart-delete-item", isAuth, postCartDeleteProduct);
 
 router.get("/checkout", isAuth, getCheckout);
 
-router.post("/create-order", isAuth, postOrder);
+router.get("/checkout/success", isAuth, getCheckoutSuccess);
+
+router.get("/checkout/cancel", isAuth, getCheckout);
 
 router.get("/orders", isAuth, getOrders);
 

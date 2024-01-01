@@ -4,11 +4,21 @@ import validator from "validator";
 import fs from "fs";
 import path from "path";
 import PDFDocument from "pdfkit";
+import Stripe from "stripe";
 
 import { prisma } from "../app";
 import { Order } from "@prisma/client";
 
 const ITEMS_PER_PAGE = 2;
+
+if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_PUBLIC_KEY) {
+	throw new Error("Stripe keys are not defined");
+}
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+	typescript: true,
+	apiVersion: "2022-08-01",
+});
 
 const paginationQueryParams = z.object({
 	page: z
@@ -271,11 +281,28 @@ export const getCheckout: RequestHandler = async (req, res, next) => {
 			return total + product.price * product.quantity;
 		}, 0);
 
+		console.log("before stripe");
+		const session = await stripe.checkout.sessions.create({
+			payment_method_types: ["card"],
+			line_items: cartProductsWithQuantity.map(product => ({
+				name: product.title,
+				description: product.description,
+				amount: product.price * 100,
+				currency: "usd",
+				quantity: product.quantity,
+			})),
+			success_url: `${req.protocol}://${req.get("host")}/checkout/success`,
+			cancel_url: `${req.protocol}://${req.get("host")}/checkout/cancel`,
+		});
+		console.log("after stripe", session);
+
 		res.render("shop/checkout", {
 			pageTitle: "Checkout",
 			path: "/checkout",
 			products: cartProductsWithQuantity,
 			totalSum,
+			sessionId: session.id,
+			stripePublicKey: process.env.STRIPE_PUBLIC_KEY,
 		});
 	} catch (error) {
 		if (!(error instanceof Error)) throw error;
@@ -287,7 +314,7 @@ export const getCheckout: RequestHandler = async (req, res, next) => {
 	}
 };
 
-export const postOrder: RequestHandler = async (req, res, next) => {
+export const getCheckoutSuccess: RequestHandler = async (req, res, next) => {
 	if (!req.session.user) return res.redirect("/");
 
 	const { cart } = await prisma.user.findUniqueOrThrow({
